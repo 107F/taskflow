@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Tasks
+{% endblock %}
+
+{% block main %}
+    <h1>Tasks</h1>
+    <input id="taskSearch" placeholder="Search tasks..." type="text">
+    <button id="filterBtn" class="btn btn-secondary">Filter</button>
+
+    <!-- Filter section with dropdowns -->
+    <div id="filterSection" style="display:none; margin-top: 10px;">
+        <label for="filterPosID">POS ID:</label>
+        <select id="filterPosID" class="form-select">
+            <option value="">All</option>
+            {% for pos in pos_data %}
+            <option value="{{ pos.pos_id }}">{{ pos.pos_id }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="filterPosName">POS Name:</label>
+        <select id="filterPosName" class="form-select">
+            <option value="">All</option>
+            {% for pos in pos_data %}
+            <option value="{{ pos.pos_name }}">{{ pos.pos_name }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- Clear Filter Button -->
+        <button id="clearFilterBtn" class="btn btn-warning" style="margin-top: 10px;">Clear Filter</button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Task ID</th>
+                <th>POS ID</th>
+                <th>POS Name</th>
+                <th>Reconciliation Date</th>
+                <th>Certified</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Priority</th>
+                <th>Start Date</th>
+                <th>Due Date</th>
+                <th>Notes</th>
+            </tr>
+        </thead>
+        <tbody id="taskTableBody">
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.task_id }}</td>
+                <td>{{ task.pos_id }}</td>
+                <td>{{ task.pos_name }}</td>
+                <td>{{ task.reconciliation_date }}</td>
+                <td>{{ task.certified }}</td>
+                <td>{{ task.description }}</td>
+                <td>{{ task.status }}</td>
+                <td>{{ task.priority }}</td>
+                <td>{{ task.start_date }}</td>
+                <td>{{ task.due_date }}</td>
+                <td>{{ task.notes }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script src="{{ url_for('static', filename='js/taskFilter.js') }}"></script>
+{% endblock %}
