@@ -39,11 +39,15 @@
                 <th>POS Name</th>
                 <th>Reconciliation Date</th>
                 <th>Certified</th>
-                <th>Description</th>
+                <th>Task Description</th>
                 <th>Status</th>
                 <th>Priority</th>
                 <th>Start Date</th>
                 <th>Due Date</th>
+                <th>Blocker Description</th>
+                <th>Blocker Responsible</th>
+                <th>Blocker Resolved</th>
+                <th>Blocker Resolution Date</th>
                 <th>Notes</th>
             </tr>
         </thead>
@@ -53,14 +57,18 @@
                 <td>{{ task.task_id }}</td>
                 <td>{{ task.pos_id }}</td>
                 <td>{{ task.pos_name }}</td>
-                <td>{{ task.reconciliation_date }}</td>
-                <td>{{ task.certified }}</td>
-                <td>{{ task.description }}</td>
-                <td>{{ task.status }}</td>
-                <td>{{ task.priority }}</td>
-                <td>{{ task.start_date }}</td>
-                <td>{{ task.due_date }}</td>
-                <td>{{ task.notes }}</td>
+                <td>{{ task.rec_date }}</td>
+                <td>{{ task.rec_certified }}</td>
+                <td>{{ task.task_desc }}</td>
+                <td>{{ task.task_status }}</td>
+                <td>{{ task.task_priority }}</td>
+                <td>{{ task.task_start_date }}</td>
+                <td>{{ task.task_due_date }}</td>
+                <td>{{ task.blocker_desc }}</td>
+                <td>{{ task.blocker_responsible }}</td>
+                <td>{{ task.blocker_resolved }}</td>
+                <td>{{ task.blocker_res_date }}</td>
+                <td>{{ task.task_notes }}</td>
             </tr>
             {% endfor %}
         </tbody>

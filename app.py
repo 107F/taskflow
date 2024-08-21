@@ -1,7 +1,6 @@
-import os
-import sqlite3
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
+from sqlalchemy import create_engine, MetaData, Table, select, and_
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions
 from helpers import apology, login_required
@@ -17,11 +16,17 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Database connection function
-def get_db_connection():
-    conn = sqlite3.connect('tasks.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+# Set up SQLAlchemy
+DATABASE_URL = "sqlite:///taskflow.db"
+engine = create_engine(DATABASE_URL)
+metadata = MetaData()
+metadata.reflect(bind=engine)
+
+# Load tables
+tasks_table = Table('tasks', metadata, autoload_with=engine)
+pos_table = Table('pos', metadata, autoload_with=engine)
+rec_table = Table('rec', metadata, autoload_with=engine)
+blockers_table = Table('blockers', metadata, autoload_with=engine)
 
 # Root route
 @app.route("/")
@@ -35,33 +40,25 @@ def index():
 def register():
     """Register user"""
     if request.method == "POST":
-        # Ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username", 400)
 
-        # Ensure password was submitted
         elif not request.form.get("password"):
             return apology("must provide password", 400)
 
-        # Ensure confirmation password matches
         elif request.form.get("password") != request.form.get("confirmation"):
             return apology("passwords do not match", 400)
 
-        # Hash the user's password
         hash_pw = generate_password_hash(request.form.get("password"))
 
-        # Insert the new user into the database
-        conn = get_db_connection()
         try:
-            conn.execute("INSERT INTO users (username, hash) VALUES (?, ?)",
-                         (request.form.get("username"), hash_pw))
-            conn.commit()
-        except sqlite3.IntegrityError:
+            with engine.connect() as conn:
+                conn.execute(
+                    users_table.insert().values(username=request.form.get("username"), password_hash=hash_pw)
+                )
+        except Exception as e:
             return apology("username already exists", 400)
-        finally:
-            conn.close()
 
-        # Redirect user to login page
         return redirect("/login")
 
     else:
@@ -74,28 +71,20 @@ def login():
     session.clear()
 
     if request.method == "POST":
-        # Ensure username was submitted
         if not request.form.get("username"):
             return apology("must provide username", 400)
 
-        # Ensure password was submitted
         elif not request.form.get("password"):
             return apology("must provide password", 400)
 
-        # Query database for username
-        conn = get_db_connection()
-        rows = conn.execute("SELECT * FROM users WHERE username = ?",
-                            (request.form.get("username"),)).fetchall()
-        conn.close()
+        with engine.connect() as conn:
+            query = select([users_table]).where(users_table.c.username == request.form.get("username"))
+            rows = conn.execute(query).fetchall()
 
-        # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
+        if len(rows) != 1 or not check_password_hash(rows[0]["password_hash"], request.form.get("password")):
             return apology("invalid username and/or password", 400)
 
-        # Remember which user has logged in
-        session["user_id"] = rows[0]["id"]
-
-        # Redirect user to tasks page
+        session["user_id"] = rows[0]["user_id"]
         return redirect("/tasks")
 
     else:
@@ -113,15 +102,32 @@ def logout():
 @login_required
 def tasks():
     """Show all tasks"""
-    conn = get_db_connection()
-    tasks = conn.execute("""
-        SELECT tasks.*, pos.pos_name 
-        FROM tasks 
-        JOIN pos ON tasks.pos_id = pos.pos_id
-    """).fetchall()
-    pos_data = conn.execute("SELECT * FROM pos").fetchall()
-    conn.close()
-    return render_template("tasks.html", tasks=tasks, pos_data=pos_data)
+    with engine.connect() as conn:
+        query = select(
+            tasks_table.c.task_id,
+            tasks_table.c.task_desc,
+            tasks_table.c.task_status,
+            tasks_table.c.task_priority,
+            tasks_table.c.task_start_date,
+            tasks_table.c.task_due_date,
+            tasks_table.c.task_notes,
+            pos_table.c.pos_id,
+            pos_table.c.pos_name,
+            rec_table.c.rec_date,
+            rec_table.c.rec_certified,
+            blockers_table.c.blocker_desc,
+            blockers_table.c.blocker_responsible,
+            blockers_table.c.blocker_resolved,
+            blockers_table.c.blocker_res_date
+        ).select_from(
+            tasks_table
+            .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+            .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+            .join(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id, isouter=True)
+        )
+        tasks = conn.execute(query).fetchall()
+
+    return render_template("tasks.html", tasks=tasks)
 
 # Route to filter tasks based on POS ID, POS Name, and search query
 @app.route("/filter_tasks", methods=["POST"])
@@ -133,31 +139,47 @@ def filter_tasks():
     pos_name = data.get("pos_name")
     search_query = data.get("search_query")
 
-    conn = get_db_connection()
-    
-    query = """
-        SELECT tasks.*, pos.pos_name 
-        FROM tasks 
-        JOIN pos ON tasks.pos_id = pos.pos_id 
-        WHERE 1=1
-    """
-    params = []
+    with engine.connect() as conn:
+        query = select(
+            tasks_table.c.task_id,
+            tasks_table.c.task_desc,
+            tasks_table.c.task_status,
+            tasks_table.c.task_priority,
+            tasks_table.c.task_start_date,
+            tasks_table.c.task_due_date,
+            tasks_table.c.task_notes,
+            pos_table.c.pos_id,
+            pos_table.c.pos_name,
+            rec_table.c.rec_date,
+            rec_table.c.rec_certified,
+            blockers_table.c.blocker_desc,
+            blockers_table.c.blocker_responsible,
+            blockers_table.c.blocker_resolved,
+            blockers_table.c.blocker_res_date
+        ).select_from(
+            tasks_table
+            .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+            .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+            .join(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id, isouter=True)
+        )
 
-    if pos_id:
-        query += " AND tasks.pos_id = ?"
-        params.append(pos_id)
-    
-    if pos_name:
-        query += " AND pos.pos_name = ?"
-        params.append(pos_name)
-    
-    if search_query:
-        query += " AND (tasks.description LIKE ? OR tasks.notes LIKE ?)"
-        params.append(f'%{search_query}%')
-        params.append(f'%{search_query}%')
+        conditions = []
+        if pos_id:
+            conditions.append(tasks_table.c.pos_id == pos_id)
+        if pos_name:
+            conditions.append(pos_table.c.pos_name == pos_name)
+        if search_query:
+            conditions.append(
+                and_(
+                    tasks_table.c.task_desc.like(f'%{search_query}%'),
+                    tasks_table.c.task_notes.like(f'%{search_query}%')
+                )
+            )
 
-    tasks = conn.execute(query, params).fetchall()
-    conn.close()
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        tasks = conn.execute(query).fetchall()
 
     tasks_list = [dict(task) for task in tasks]
     return jsonify(tasks=tasks_list)
@@ -167,140 +189,93 @@ def filter_tasks():
 @login_required
 def kanban():
     """Show Kanban board"""
-    conn = get_db_connection()
-    tasks = conn.execute("""
-        SELECT tasks.*, pos.pos_name 
-        FROM tasks 
-        JOIN pos ON tasks.pos_id = pos.pos_id
-    """).fetchall()
-    conn.close()
+    with engine.connect() as conn:
+        query = select(
+            tasks_table.c.task_id,
+            tasks_table.c.task_desc,
+            tasks_table.c.task_status,
+            tasks_table.c.task_priority,
+            tasks_table.c.task_start_date,
+            tasks_table.c.task_due_date,
+            tasks_table.c.task_notes,
+            pos_table.c.pos_id,
+            pos_table.c.pos_name,
+            rec_table.c.rec_date,
+            rec_table.c.rec_certified,
+            blockers_table.c.blocker_desc,
+            blockers_table.c.blocker_responsible,
+            blockers_table.c.blocker_resolved,
+            blockers_table.c.blocker_res_date
+        ).select_from(
+            tasks_table
+            .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+            .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+            .join(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id, isouter=True)
+        )
+        tasks = conn.execute(query).fetchall()
+
     return render_template("kanban.html", tasks=tasks)
-
-# Create task route
-@app.route("/create", methods=["GET", "POST"])
-@login_required
-def create():
-    """Create a new task"""
-    conn = get_db_connection()
-    pos_data = conn.execute("SELECT * FROM pos").fetchall()
-    conn.close()
-
-    if request.method == "POST":
-        pos_id = request.form.get("pos_id")
-        reconciliation_date = request.form.get("reconciliation_date")
-        certified = request.form.get("certified").lower() == 'true'
-        description = request.form.get("description")
-        status = request.form.get("status")
-        priority = request.form.get("priority")
-        start_date = request.form.get("start_date")
-        due_date = request.form.get("due_date")
-        notes = request.form.get("notes")
-
-        conn = get_db_connection()
-        conn.execute("""
-            INSERT INTO tasks (pos_id, reconciliation_date, certified, description, status, priority, start_date, due_date, notes)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (pos_id, reconciliation_date, certified, description, status, priority, start_date, due_date, notes))
-        conn.commit()
-        conn.close()
-        return redirect("/tasks")
-    else:
-        return render_template("create.html", pos_data=pos_data)
-
-# Route to get a task by task_id
-@app.route("/get_task/<int:task_id>", methods=["GET"])
-@login_required
-def get_task(task_id):
-    """Fetch a specific task by task_id"""
-    conn = get_db_connection()
-    task = conn.execute("""
-        SELECT tasks.*, pos.pos_name 
-        FROM tasks 
-        JOIN pos ON tasks.pos_id = pos.pos_id 
-        WHERE tasks.task_id = ?
-    """, (task_id,)).fetchone()
-    conn.close()
-
-    if task:
-        return jsonify(task=dict(task))
-    else:
-        return jsonify(task=None)
 
 # Modify task route
 @app.route("/modify", methods=["GET", "POST"])
 @login_required
 def modify():
     """Modify an existing task"""
-    conn = get_db_connection()
-    
-    # Handle GET request to render the modify page
-    if request.method == "GET":
-        pos_data = conn.execute("SELECT * FROM pos").fetchall()
-        tasks = conn.execute("""
-            SELECT tasks.*, pos.pos_name 
-            FROM tasks 
-            JOIN pos ON tasks.pos_id = pos.pos_id
-        """).fetchall()
-        conn.close()
-        return render_template("modify.html", pos_data=pos_data, tasks=tasks)
+    with engine.connect() as conn:
+        if request.method == "GET":
+            query = select(
+                tasks_table.c.task_id,
+                tasks_table.c.task_desc,
+                tasks_table.c.task_status,
+                tasks_table.c.task_priority,
+                tasks_table.c.task_start_date,
+                tasks_table.c.task_due_date,
+                tasks_table.c.task_notes,
+                pos_table.c.pos_id,
+                pos_table.c.pos_name,
+                rec_table.c.rec_date,
+                rec_table.c.rec_certified,
+                blockers_table.c.blocker_desc,
+                blockers_table.c.blocker_responsible,
+                blockers_table.c.blocker_resolved,
+                blockers_table.c.blocker_res_date
+            ).select_from(
+                tasks_table
+                .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+                .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+                .join(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id, isouter=True)
+            )
+            tasks = conn.execute(query).fetchall()
+            pos_data = conn.execute(select([pos_table])).fetchall()
+            return render_template("modify.html", tasks=tasks, pos_data=pos_data)
 
-    # Handle POST request to modify the task
-    elif request.method == "POST":
-        task_id = request.form.get("task_id")
+        elif request.method == "POST":
+            task_id = request.form.get("task_id")
+            update_fields = {}
+            if request.form.get("pos_id"):
+                update_fields["pos_id"] = request.form.get("pos_id")
+            if request.form.get("rec_date"):
+                update_fields["rec_id"] = request.form.get("rec_id")
+            if request.form.get("blocker_id"):
+                update_fields["blocker_id"] = request.form.get("blocker_id")
+            if request.form.get("task_desc"):
+                update_fields["task_desc"] = request.form.get("task_desc")
+            if request.form.get("task_status"):
+                update_fields["task_status"] = request.form.get("task_status")
+            if request.form.get("task_priority"):
+                update_fields["task_priority"] = request.form.get("task_priority")
+            if request.form.get("task_start_date"):
+                update_fields["task_start_date"] = request.form.get("task_start_date")
+            if request.form.get("task_due_date"):
+                update_fields["task_due_date"] = request.form.get("task_due_date")
+            if request.form.get("task_notes"):
+                update_fields["task_notes"] = request.form.get("task_notes")
 
-        # Build the update query dynamically based on the fields provided
-        update_fields = []
-        update_values = []
+            if update_fields:
+                query = tasks_table.update().where(tasks_table.c.task_id == task_id).values(update_fields)
+                conn.execute(query)
 
-        if request.form.get("pos_id"):
-            update_fields.append("pos_id = ?")
-            update_values.append(request.form.get("pos_id"))
-
-        if request.form.get("reconciliation_date"):
-            update_fields.append("reconciliation_date = ?")
-            update_values.append(request.form.get("reconciliation_date"))
-
-        if request.form.get("certified"):
-            update_fields.append("certified = ?")
-            update_values.append(request.form.get("certified").lower() == 'true')
-
-        if request.form.get("description"):
-            update_fields.append("description = ?")
-            update_values.append(request.form.get("description"))
-
-        if request.form.get("status"):
-            update_fields.append("status = ?")
-            update_values.append(request.form.get("status"))
-
-        if request.form.get("priority"):
-            update_fields.append("priority = ?")
-            update_values.append(request.form.get("priority"))
-
-        if request.form.get("start_date"):
-            update_fields.append("start_date = ?")
-            update_values.append(request.form.get("start_date"))
-
-        if request.form.get("due_date"):
-            update_fields.append("due_date = ?")
-            update_values.append(request.form.get("due_date"))
-
-        if request.form.get("notes"):
-            update_fields.append("notes = ?")
-            update_values.append(request.form.get("notes"))
-
-        # If any fields are provided, proceed with the update
-        if update_fields:
-            update_query = f"UPDATE tasks SET {', '.join(update_fields)} WHERE task_id = ?"
-            update_values.append(task_id)
-
-            conn.execute(update_query, update_values)
-            conn.commit()
-
-        conn.close()
-
-        # Return a JSON response to indicate success
-        return jsonify({"success": True})
-
+            return jsonify({"success": True})
 
 # Apology route for displaying error messages
 def errorhandler(e):
