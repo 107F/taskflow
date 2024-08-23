@@ -4,12 +4,21 @@ document.addEventListener("DOMContentLoaded", function() {
     taskSearchInput.addEventListener("input", function() {
         const query = taskSearchInput.value;
 
-        fetch(`/search_tasks?q=${encodeURIComponent(query)}`)
-            .then(response => response.json())
-            .then(data => {
-                const taskTableBody = document.getElementById("taskTableBody");
-                taskTableBody.innerHTML = ""; // Clear the table body
+        // Send the AJAX request to the server
+        fetch(`/filter_tasks`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ search_query: query }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log("Received data:", data);  // Debugging to see the received JSON
+            const taskTableBody = document.getElementById("taskTableBody");
+            taskTableBody.innerHTML = ""; // Clear the table body
 
+            if (data.tasks && data.tasks.length > 0) {
                 data.tasks.forEach(task => {
                     const row = document.createElement("tr");
 
@@ -29,6 +38,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
                     taskTableBody.appendChild(row);
                 });
-            });
+            } else {
+                taskTableBody.innerHTML = "<tr><td colspan='11'>No tasks found</td></tr>";
+            }
+        })
+        .catch(error => console.error("Error fetching tasks:", error));
     });
 });

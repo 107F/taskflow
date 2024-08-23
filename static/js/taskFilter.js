@@ -1,83 +1,60 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const filterButton = document.getElementById('filterBtn');
-    const filterSection = document.getElementById('filterSection');
-    const posIdDropdown = document.getElementById('filterPosID');
-    const posNameDropdown = document.getElementById('filterPosName');
-    const taskTableBody = document.getElementById('taskTableBody');
-    const clearFilterButton = document.getElementById('clearFilterBtn');
-    const taskSearch = document.getElementById('taskSearch');
+document.addEventListener("DOMContentLoaded", function() {
+    const filterBtn = document.getElementById("filterBtn");
+    const clearFilterBtn = document.getElementById("clearFilterBtn");
+    const posIDSelect = document.getElementById("filterPosID");
+    const posNameSelect = document.getElementById("filterPosName");
+    const searchInput = document.getElementById("taskSearch");
+    const taskTableBody = document.getElementById("taskTableBody");
 
-    // Show/hide the filter section when the filter button is clicked
-    filterButton.addEventListener('click', function () {
-        if (filterSection.style.display === 'none' || !filterSection.style.display) {
-            filterSection.style.display = 'block';
-        } else {
-            filterSection.style.display = 'none';
-        }
-    });
+    // Event listener for the Filter button
+    filterBtn.addEventListener("click", function() {
+        const posID = posIDSelect.value;
+        const posName = posNameSelect.value;
+        const searchQuery = searchInput.value;
 
-    // Function to fetch and display tasks based on selected filters
-    function fetchTasks() {
-        const posId = posIdDropdown.value;
-        const posName = posNameDropdown.value;
-        const searchQuery = taskSearch.value;
+        const data = {
+            pos_id: posID,
+            pos_name: posName,
+            search_query: searchQuery
+        };
 
-        fetch('/filter_tasks', {
-            method: 'POST',
+        fetch("/filter_tasks", {
+            method: "POST",
             headers: {
-                'Content-Type': 'application/json'
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                pos_id: posId,
-                pos_name: posName,
-                search_query: searchQuery
-            })
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {
-            // Clear the current table
-            taskTableBody.innerHTML = '';
+            taskTableBody.innerHTML = ""; // Clear existing tasks
 
-            // Populate the table with the filtered tasks
+            // Populate table with filtered tasks
             data.tasks.forEach(task => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+                const row = `<tr>
                     <td>${task.task_id}</td>
                     <td>${task.pos_id}</td>
                     <td>${task.pos_name}</td>
-                    <td>${task.reconciliation_date}</td>
-                    <td>${task.certified}</td>
-                    <td>${task.description}</td>
-                    <td>${task.status}</td>
-                    <td>${task.priority}</td>
-                    <td>${task.start_date}</td>
-                    <td>${task.due_date}</td>
-                    <td>${task.notes}</td>
-                `;
-                taskTableBody.appendChild(row);
+                    <td>${task.rec_date}</td>
+                    <td>${task.rec_certified}</td>
+                    <td>${task.task_desc}</td>
+                    <td>${task.task_status}</td>
+                    <td>${task.task_priority}</td>
+                    <td>${task.task_start_date}</td>
+                    <td>${task.task_due_date}</td>
+                    <td>${task.task_notes}</td>
+                </tr>`;
+                taskTableBody.innerHTML += row;
             });
-        });
-    }
-
-    // Fetch tasks when the dropdown values change
-    posIdDropdown.addEventListener('change', function() {
-        posNameDropdown.selectedIndex = 0;  // Reset the POS Name dropdown
-        fetchTasks();
+        })
+        .catch(error => console.error("Error:", error));
     });
 
-    posNameDropdown.addEventListener('change', function() {
-        posIdDropdown.selectedIndex = 0;  // Reset the POS ID dropdown
-        fetchTasks();
-    });
-
-    // Fetch tasks when the search field is used
-    taskSearch.addEventListener('input', fetchTasks);
-
-    // Clear filters and show all tasks when the "Clear Filter" button is clicked
-    clearFilterButton.addEventListener('click', function () {
-        posIdDropdown.selectedIndex = 0;
-        posNameDropdown.selectedIndex = 0;
-        taskSearch.value = '';
-        fetchTasks();  // Fetch all tasks
+    // Event listener for the Clear Filter button
+    clearFilterBtn.addEventListener("click", function() {
+        posIDSelect.value = "";
+        posNameSelect.value = "";
+        searchInput.value = "";
+        filterBtn.click(); // Trigger a refresh of the tasks table without any filters
     });
 });
