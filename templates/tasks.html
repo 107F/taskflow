@@ -74,5 +74,57 @@
         </tbody>
     </table>
 </div>
+
+<!-- Add JavaScript for Dynamic Search -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        let input = document.getElementById('taskSearch');
+
+        input.addEventListener('input', async function() {
+            let query = input.value;
+            let posId = document.getElementById('filterPosID').value;
+            let posName = document.getElementById('filterPosName').value;
+
+            // Send fetch request to server with query parameters
+            let response = await fetch('/filter_tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    search_query: query,
+                    pos_id: posId,
+                    pos_name: posName
+                })
+            });
+
+            let data = await response.json();
+            let tasks = data.tasks;
+
+            // Clear existing tasks
+            let tableBody = document.getElementById('taskTableBody');
+            tableBody.innerHTML = '';
+
+            // Populate table with fetched tasks
+            for (let task of tasks) {
+                let row = `<tr>
+                    <td>${task.task_id}</td>
+                    <td>${task.pos_id}</td>
+                    <td>${task.pos_name}</td>
+                    <td>${task.rec_date ? task.rec_date : ''}</td>
+                    <td>${task.rec_certified}</td>
+                    <td>${task.task_desc}</td>
+                    <td>${task.task_status}</td>
+                    <td>${task.task_priority}</td>
+                    <td>${task.task_start_date ? task.task_start_date : ''}</td>
+                    <td>${task.task_due_date ? task.task_due_date : ''}</td>
+                    <td>${task.task_notes}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+            }
+        });
+    });
+</script>
+
 <script src="{{ url_for('static', filename='js/taskFilter.js') }}"></script>
 {% endblock %}
