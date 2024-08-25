@@ -4,6 +4,7 @@ from sqlalchemy import create_engine, MetaData, Table, select, and_, or_
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions
 from helpers import apology, login_required
+from datetime import date
 
 # Configure application
 app = Flask(__name__)
@@ -111,21 +112,31 @@ def tasks():
         ).select_from(
             tasks_table
             .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-            .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id, isouter=True)
+            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
         )
         tasks = conn.execute(query).fetchall()
 
         pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
 
-    return render_template("tasks.html", tasks=tasks, pos_data=pos_data)
+    return render_template("tasks.html", tasks=tasks, pos_data=pos_data, date=date)
 
 @app.route("/filter_tasks", methods=["POST"])
 @login_required
 def filter_tasks():
     data = request.get_json()
-    search_query = data.get("search_query", "")
+    print("Received data from client:", data)  # Debugging: Log the data received from the client
+
+    search_query = data.get("search_query", "").strip()
     pos_id = data.get("pos_id")
     pos_name = data.get("pos_name")
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+
+    print("Parsed filter criteria - Search Query:", search_query, 
+          "POS ID:", pos_id, 
+          "POS Name:", pos_name, 
+          "Start Date:", start_date, 
+          "End Date:", end_date)  # Debugging: Log parsed filter criteria
 
     with engine.connect() as conn:
         query = select(
@@ -143,10 +154,12 @@ def filter_tasks():
         ).select_from(
             tasks_table
             .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-            .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id, isouter=True)
+            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
         )
 
         conditions = []
+
+        # Apply filters based on the provided inputs
         if pos_id:
             conditions.append(pos_table.c.pos_id == pos_id)
         if pos_name:
@@ -161,10 +174,21 @@ def filter_tasks():
                 pos_table.c.pos_name.ilike(search_term)
             ))
 
+        # Apply date filter if either start or end date is provided
+        if start_date and end_date:
+            conditions.append(and_(rec_table.c.rec_date >= start_date, rec_table.c.rec_date <= end_date))
+        elif start_date:
+            conditions.append(rec_table.c.rec_date >= start_date)
+        elif end_date:
+            conditions.append(rec_table.c.rec_date <= end_date)
+        
         if conditions:
             query = query.where(and_(*conditions))
 
+        print("Executing query with conditions:", str(query))  # Debugging: Log the raw SQL query being executed
+
         tasks = conn.execute(query).fetchall()
+        print("Fetched tasks:", tasks)  # Debugging: Log fetched tasks
 
     tasks_list = []
     for task in tasks:
@@ -182,6 +206,7 @@ def filter_tasks():
             "rec_certified": task[10]
         })
 
+    print("Returning tasks list to client:", tasks_list)  # Debugging: Log the final tasks list sent to the client
     return jsonify(tasks=tasks_list)
 
 @app.route("/kanban")
@@ -207,8 +232,8 @@ def kanban():
         ).select_from(
             tasks_table
             .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-            .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
-            .join(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id, isouter=True)
+            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+            .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
         )
         tasks = conn.execute(query).fetchall()
 
@@ -238,8 +263,8 @@ def modify():
             ).select_from(
                 tasks_table
                 .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-                .join(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
-                .join(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id, isouter=True)
+                .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+                .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
             )
             tasks = conn.execute(query).fetchall()
             pos_data = conn.execute(select([pos_table])).fetchall()
