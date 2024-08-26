@@ -86,17 +86,19 @@ document.addEventListener("DOMContentLoaded", function () {
                 data.tasks.forEach(task => {
                     const row = `
                     <tr>
-                        <td>${task.task_id}</td>
-                        <td>${task.pos_id}</td>
-                        <td>${task.pos_name}</td>
-                        <td>${task.rec_date || task.reconciliation_date}</td>
-                        <td>${task.rec_certified || task.certified}</td>
-                        <td>${task.task_desc || task.description}</td>
-                        <td>${task.task_status || task.status}</td>
-                        <td>${task.task_priority || task.priority}</td>
-                        <td>${task.task_start_date || task.start_date}</td>
-                        <td>${task.task_due_date || task.due_date}</td>
-                        <td>${task.task_notes || task.notes}</td>
+                        <td>${task.task_id || 'n/a'}</td>
+                        <td>${task.pos_id || 'n/a'}</td>
+                        <td>${task.pos_name || 'n/a'}</td>
+                        <td>${task.rec_date || 'n/a'}</td>
+                        <td>${task.rec_certified || 'n/a'}</td> <!-- Render "Yes", "No", or "n/a" -->
+                        <td>${task.task_desc || 'n/a'}</td>
+                        <td>${task.task_status || 'n/a'}</td>
+                        <td>${task.task_priority || 'n/a'}</td>
+                        <td>${task.blocker_desc || 'n/a'}</td>
+                        <td>${task.blocker_responsible || 'n/a'}</td>
+                        <td>${task.task_start_date || 'n/a'}</td>
+                        <td>${task.task_due_date || 'n/a'}</td>
+                        <td>${task.task_notes || 'n/a'}</td>
                     </tr>`;
                     taskTableBody.innerHTML += row;
                 });
@@ -104,7 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
             } else {
                 // If no tasks are returned, display a message indicating that
                 console.log("No tasks found"); // Debugging: Log when no tasks are found
-                taskTableBody.innerHTML = "<tr><td colspan='11'>No tasks found</td></tr>";
+                taskTableBody.innerHTML = "<tr><td colspan='13'>No tasks found</td></tr>";
             }
         })
         .catch(error => console.error("Error fetching tasks:", error));

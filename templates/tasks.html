@@ -1,135 +1,131 @@
 {% extends "layout.html" %}
 
 {% block main %}
-<div class="container">
-    <h1>Tasks</h1>
-    
-    <!-- Search bar and filter button row -->
+<div class="container-fluid">
     <div class="row">
-        <!-- Search input for filtering tasks dynamically by task description, status, priority, etc. -->
-        <div class="col-md-4">
-            <input id="taskSearch" class="form-control" placeholder="Search tasks..." type="text">
-        </div>
-        
-        <!-- Button to apply filters based on selected criteria -->
-        <div class="col-md-2">
-            <button id="filterBtn" class="btn btn-secondary">Filter</button>
-        </div>
-    </div>
+        <!-- Filters Section -->
+        <div class="col-md-3">
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <h2>Filter</h2>
+                <label for="taskSearch">Search Tasks:</label>
+                <input id="taskSearch" class="form-control" placeholder="Search tasks..." type="text">
+            </div>
 
-    <!-- Filter section for detailed filtering options -->
-    <div id="filterSection" class="mt-3">
-        <div class="row">
-            <!-- Dropdown for filtering tasks by POS ID -->
-            <div class="col-md-3">
-                <label for="filterPosID">POS ID:</label>
-                <select id="filterPosID" class="form-select">
-                    <!-- Default option for selecting all POS IDs -->
+            <!-- POS Group -->
+            <div class="mb-4">
+                <label for="filterPosID">POS Number:</label>
+                <select id="filterPosID" class="form-select mb-2">
                     <option value="">All</option>
-                    <!-- Dynamically populate POS ID options from server-side variable 'pos_data' -->
                     {% for pos in pos_data %}
                     <option value="{{ pos.pos_id }}">{{ pos.pos_id }}</option>
                     {% endfor %}
                 </select>
-            </div>
 
-            <!-- Dropdown for filtering tasks by POS Name -->
-            <div class="col-md-3">
                 <label for="filterPosName">POS Name:</label>
                 <select id="filterPosName" class="form-select">
-                    <!-- Default option for selecting all POS Names -->
                     <option value="">All</option>
-                    <!-- Dynamically populate POS Name options from server-side variable 'pos_data' -->
                     {% for pos in pos_data %}
                     <option value="{{ pos.pos_name }}">{{ pos.pos_name }}</option>
                     {% endfor %}
                 </select>
             </div>
 
-            <!-- Input field for filtering tasks by Reconciliation Start Date -->
-            <div class="col-md-3">
-                <label for="startDate">Reconciliation Start Date:</label>
-                <!-- Default value set to today's date -->
-                <input type="date" id="startDate" class="form-control" value="{{ date.today().strftime('%Y-%m-%d') }}">
+            <!-- Status Filters -->
+            <div class="mb-4">
+                <label>Status:</label>
+                <div>
+                    <input type="checkbox" id="statusBacklog" value="Backlog"> Backlog
+                </div>
+                <div>
+                    <input type="checkbox" id="statusToDo" value="To Do"> To Do
+                </div>
+                <div>
+                    <input type="checkbox" id="statusInProgress" value="In Progress"> In Progress
+                </div>
+                <div>
+                    <input type="checkbox" id="statusDone" value="Done"> Done
+                </div>
             </div>
 
-            <!-- Input field for filtering tasks by Reconciliation End Date -->
-            <div class="col-md-3">
+            <!-- Priority Filters -->
+            <div class="mb-4">
+                <label>Priority:</label>
+                <div>
+                    <input type="checkbox" id="priorityNone" value="None"> None
+                </div>
+                <div>
+                    <input type="checkbox" id="priorityLow" value="Low"> Low
+                </div>
+                <div>
+                    <input type="checkbox" id="priorityMedium" value="Medium"> Medium
+                </div>
+                <div>
+                    <input type="checkbox" id="priorityHigh" value="High"> High
+                </div>
+            </div>
+
+            <!-- Reconciliation Dates Group -->
+            <div class="mb-4">
+                <label for="startDate">Reconciliation Start Date:</label>
+                <input type="date" id="startDate" class="form-control mb-2" value="{{ date.today().strftime('%Y-%m-%d') }}">
+
                 <label for="endDate">Reconciliation End Date:</label>
-                <!-- Default value set to today's date -->
                 <input type="date" id="endDate" class="form-control" value="{{ date.today().strftime('%Y-%m-%d') }}">
             </div>
-            
-            <!-- Button to clear all applied filters and reset the task list -->
-            <div class="col-md-2 d-flex align-items-end">
-                <button id="clearFilterBtn" class="btn btn-warning">Clear Filter</button>
+
+            <!-- Filter Buttons -->
+            <div>
+                <button id="filterBtn" class="btn btn-primary mb-2">Apply Filters</button>
+                <button id="clearFilterBtn" class="btn btn-secondary">Clear Filters</button>
             </div>
         </div>
-    </div>
 
-    <!-- Section for filtering tasks by status -->
-    <div class="mt-3">
-        <label>Status:</label>
-        <div>
-            <!-- Checkboxes for filtering tasks by different statuses -->
-            <input type="checkbox" id="statusBacklog" value="Backlog"> Backlog
-            <input type="checkbox" id="statusToDo" value="To Do"> To Do
-            <input type="checkbox" id="statusInProgress" value="In Progress"> In Progress
-            <input type="checkbox" id="statusDone" value="Done"> Done
+        <!-- Tasks Table Section -->
+        <div class="col-md-9">
+            <h2>Tasks</h2>
+            <table class="table table-striped mt-3">
+                <thead>
+                    <tr>
+                        <th>Task ID</th>
+                        <th>POS ID</th>
+                        <th>POS Name</th>
+                        <th>Reconciliation Date</th>
+                        <th>Certified</th>
+                        <th>Task Description</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Blockers Description</th>
+                        <th>Blockers Responsible</th>
+                        <th>Start Date</th>
+                        <th>Due Date</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody id="taskTableBody">
+                    {% for task in tasks %}
+                    <tr>
+                        <td>{{ task.task_id }}</td>
+                        <td>{{ task.pos_id }}</td>
+                        <td>{{ task.pos_name }}</td>
+                        <td>{{ task.rec_date }}</td>
+                        <td>{{ task.rec_certified }}</td>  <!-- Ensure this shows "Yes", "No", or "n/a" -->
+                        <td>{{ task.task_desc }}</td>
+                        <td>{{ task.task_status }}</td>
+                        <td>{{ task.task_priority }}</td>
+                        <td>{{ task.blocker_desc }}</td>
+                        <td>{{ task.blocker_responsible }}</td>
+                        <td>{{ task.task_start_date }}</td>
+                        <td>{{ task.task_due_date }}</td>
+                        <td>{{ task.task_notes }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-
-    <!-- Section for filtering tasks by priority -->
-    <div class="mt-3">
-        <label>Priority:</label>
-        <div>
-            <!-- Checkboxes for filtering tasks by different priorities -->
-            <input type="checkbox" id="priorityNone" value="None"> None
-            <input type="checkbox" id="priorityLow" value="Low"> Low
-            <input type="checkbox" id="priorityMedium" value="Medium"> Medium
-            <input type="checkbox" id="priorityHigh" value="High"> High
-        </div>
-    </div>
-
-    <!-- Table to display the list of tasks -->
-    <table class="table table-striped mt-3">
-        <thead>
-            <tr>
-                <!-- Table headers for each task attribute -->
-                <th>Task ID</th>
-                <th>POS ID</th>
-                <th>POS Name</th>
-                <th>Reconciliation Date</th>
-                <th>Certified</th>
-                <th>Task Description</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Start Date</th>
-                <th>Due Date</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody id="taskTableBody">
-            <!-- Dynamically populate table rows with task data -->
-            {% for task in tasks %}
-            <tr>
-                <td>{{ task.task_id }}</td>
-                <td>{{ task.pos_id }}</td>
-                <td>{{ task.pos_name }}</td>
-                <td>{{ task.rec_date }}</td>
-                <td>{{ task.rec_certified }}</td>
-                <td>{{ task.task_desc }}</td>
-                <td>{{ task.task_status }}</td>
-                <td>{{ task.task_priority }}</td>
-                <td>{{ task.task_start_date }}</td>
-                <td>{{ task.task_due_date }}</td>
-                <td>{{ task.task_notes }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 
-<!-- Include JavaScript file for handling AJAX requests and dynamic task filtering -->
+<!-- Reference to the consolidated JavaScript file -->
 <script src="{{ url_for('static', filename='js/tasksLookup.js') }}"></script>
 {% endblock %}
