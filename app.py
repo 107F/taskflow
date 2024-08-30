@@ -131,7 +131,7 @@ def logout():
 @login_required
 def tasks():
     """
-    Display all tasks to the logged-in user, along with filtering options.
+    Display all tasks to the logged-in user, ordered by task_id in descending order.
     """
     with engine.connect() as conn:
         # Query to select all tasks with related data from joined tables
@@ -154,7 +154,7 @@ def tasks():
             .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
             .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
             .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
-        )
+        ).order_by(tasks_table.c.task_id.desc())  # Ensure descending order by task_id
 
         # Execute query and fetch all tasks
         tasks = conn.execute(query).fetchall()

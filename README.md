@@ -14,3 +14,5 @@ This is my final project for the course CS50 by Harvard on EdX 2024
     Development Process
         Modular code structure with reusable components.
         Dynamic filtering and task management implemented for improved user experience.
+5. Moved all task filters to a reusable sidebar template to maintain a clean and consistent layout across pages.
+6. Refactored the DOM by moving most of the code from `tasks.html` to a partial template for easier maintenance and reuse across different pages.

@@ -1,0 +1,74 @@
+<!-- Search Bar -->
+<div class="mb-4">
+    <h2>Filter</h2>
+    <label for="taskSearch">Search Tasks:</label>
+    <input id="taskSearch" class="form-control" placeholder="Search tasks..." type="text">
+</div>
+
+<!-- POS Group -->
+<div class="mb-4">
+    <label for="filterPosID">POS Number:</label>
+    <select id="filterPosID" class="form-select mb-2">
+        <option value="">All</option>
+        {% for pos in pos_data %}
+        <option value="{{ pos.pos_id }}">{{ pos.pos_id }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="filterPosName">POS Name:</label>
+    <select id="filterPosName" class="form-select">
+        <option value="">All</option>
+        {% for pos in pos_data %}
+        <option value="{{ pos.pos_name }}">{{ pos.pos_name }}</option>
+        {% endfor %}
+    </select>
+</div>
+
+<!-- Status Filters -->
+<div class="mb-4">
+    <label>Status:</label>
+    <div>
+        <input type="checkbox" id="statusBacklog" value="Backlog"> Backlog
+    </div>
+    <div>
+        <input type="checkbox" id="statusToDo" value="To Do"> To Do
+    </div>
+    <div>
+        <input type="checkbox" id="statusInProgress" value="In Progress"> In Progress
+    </div>
+    <div>
+        <input type="checkbox" id="statusDone" value="Done"> Done
+    </div>
+</div>
+
+<!-- Priority Filters -->
+<div class="mb-4">
+    <label>Priority:</label>
+    <div>
+        <input type="checkbox" id="priorityNone" value="None"> None
+    </div>
+    <div>
+        <input type="checkbox" id="priorityLow" value="Low"> Low
+    </div>
+    <div>
+        <input type="checkbox" id="priorityMedium" value="Medium"> Medium
+    </div>
+    <div>
+        <input type="checkbox" id="priorityHigh" value="High"> High
+    </div>
+</div>
+
+<!-- Reconciliation Dates Group -->
+<div class="mb-4">
+    <label for="startDate">Reconciliation Start Date:</label>
+    <input type="date" id="startDate" class="form-control mb-2" value="{{ date.today().strftime('%Y-%m-%d') }}">
+
+    <label for="endDate">Reconciliation End Date:</label>
+    <input type="date" id="endDate" class="form-control" value="{{ date.today().strftime('%Y-%m-%d') }}">
+</div>
+
+<!-- Filter Buttons -->
+<div>
+    <button id="filterBtn" class="btn btn-primary mb-2">Apply Filters</button>
+    <button id="clearFilterBtn" class="btn btn-secondary">Clear Filters</button>
+</div>
