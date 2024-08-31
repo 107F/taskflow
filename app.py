@@ -308,14 +308,13 @@ def create_task():
     if request.method == "POST":
         # Get form data
         pos_id = request.form.get("pos_id")
-        pos_name = request.form.get("pos_name")
 
         # Optional fields
         reconciliation_date = request.form.get("reconciliation_date") or None
         certified = request.form.get("certified") or None
         description = request.form.get("description") or None
-        status = request.form.getlist("status")  # Get list of selected statuses
-        priority = request.form.getlist("priority")  # Get list of selected priorities
+        status = request.form.get("status") or None
+        priority = request.form.get("priority") or None
         start_date = request.form.get("start_date") or None
         due_date = request.form.get("due_date") or None
         notes = request.form.get("notes") or None
@@ -335,19 +334,18 @@ def create_task():
             return redirect("/create")
 
         # Validate required fields
-        if not pos_id or not pos_name:
-            flash("POS ID and POS Name are required.")
+        if not pos_id:
+            flash("POS ID is required.")
             return redirect("/create")
 
-        # Insert the new task into the database
         try:
             with engine.connect() as conn:
                 # Insert the new task into the tasks table
                 task_insert = tasks_table.insert().values(
                     pos_id=pos_id,
                     task_desc=description,
-                    task_status=','.join(status) if status else None,
-                    task_priority=','.join(priority) if priority else None,
+                    task_status=status,
+                    task_priority=priority,
                     task_start_date=start_date,
                     task_due_date=due_date,
                     task_notes=notes
@@ -356,25 +354,41 @@ def create_task():
                 task_id = result.inserted_primary_key[0]  # Get the inserted task ID
 
                 # Insert the related blocker information if provided
+                blocker_id = None
                 if blocker_desc or blocker_responsible:
-                    conn.execute(blockers_table.insert().values(
+                    blocker_insert = blockers_table.insert().values(
                         blocker_desc=blocker_desc,
                         blocker_responsible=blocker_responsible,
-                        task_id=task_id  # Assuming you want to link it with the new task
-                    ))
+                        task_id=task_id,  # Link with the new task
+                        pos_id=pos_id
+                    )
+                    blocker_result = conn.execute(blocker_insert)
+                    blocker_id = blocker_result.inserted_primary_key[0]  # Get the inserted blocker ID
 
                 # Insert reconciliation information into rec_table if needed
-                if reconciliation_date or certified:
-                    conn.execute(rec_table.insert().values(
+                rec_id = None
+                if reconciliation_date or certified is not None:
+                    rec_insert = rec_table.insert().values(
                         rec_date=reconciliation_date,
                         rec_certified=(certified == 'true') if certified else None,
-                        task_id=task_id
-                    ))
+                        task_id=task_id,  # Link with the new task
+                        pos_id=pos_id,
+                        blocker_id=blocker_id  # Link with the new blocker if created
+                    )
+                    rec_result = conn.execute(rec_insert)
+                    rec_id = rec_result.inserted_primary_key[0]  # Get the inserted rec ID
+
+                # Update the task record with blocker_id and rec_id if they were created
+                conn.execute(
+                    tasks_table.update()
+                    .where(tasks_table.c.task_id == task_id)
+                    .values(blocker_id=blocker_id, rec_id=rec_id)
+                )
 
                 conn.commit()
             flash("Task created successfully!")
         except Exception as e:
-            logger.error(f"Error creating task: {e}")
+            logger.error(f"Error creating task: {traceback.format_exc()}")
             flash("An error occurred while creating the task.")
             return redirect("/create")
 
@@ -383,10 +397,9 @@ def create_task():
         # Fetch POS data and Blockers data for the form dropdown
         with engine.connect() as conn:
             pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
-            blockers_data = conn.execute(select(blockers_table.c.blocker_desc, blockers_table.c.blocker_responsible)).fetchall()
 
         # Pass 'date' to the template for rendering date inputs
-        return render_template("create.html", pos_data=pos_data, blockers_data=blockers_data, date=date)
+        return render_template("create.html", pos_data=pos_data, date=date)
 
 
 def errorhandler(e):
