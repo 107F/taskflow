@@ -5,180 +5,26 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Create Task</h1>
-    <form action="/create" method="post">
-        <div class="mb-3">
-            <select class="form-control mx-auto w-auto" name="pos_id">
-                {% for pos in pos_data %}
-                    <option value="{{ pos.pos_id }}">{{ pos.pos_name }}</option>
-                {% endfor %}
-            </select>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            {% include "_sidebar.html" %} <!-- Include sidebar for filters right after the navbar -->
         </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="reconciliation_date" placeholder="Reconciliation Date (YYYY-MM-DD)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="certified" placeholder="Certified (true/false)" type="text">
-        </div>
-        <div class="mb-3">
-            <textarea class="form-control mx-auto w-auto" name="description" placeholder="Task Description"></textarea>
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="status" placeholder="Status (e.g., Backlog, In Progress, Done)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="priority" placeholder="Priority (e.g., Low, Medium, High)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="start_date" placeholder="Start Date (YYYY-MM-DD)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" name="due_date" placeholder="Due Date (YYYY-MM-DD)" type="text">
-        </div>
-        <div class="mb-3">
-            <textarea class="form-control mx-auto w-auto" name="notes" placeholder="Additional Notes"></textarea>
-        </div>
-        <button class="btn btn-primary" type="submit">Submit</button>
-    </form>
 
-    <hr>
+        <!-- Main Content Area -->
+        <div class="col-md-9">
+            <h1>Create Task</h1>
 
-    <h2>All Tasks</h2>
-    
-    <!-- Search and Filter Controls -->
-    <input id="taskSearchCreate" placeholder="Search tasks..." type="text">
-    <button id="filterBtnCreate" class="btn btn-secondary">Filter</button>
+            <!-- Include Create Task Form -->
+            {% include "_create_form.html" %}
+            
+            <hr>
 
-    <div id="filterSectionCreate" style="display:none; margin-top: 10px;">
-        <label for="filterPosIDCreate">POS ID:</label>
-        <select id="filterPosIDCreate" class="form-select">
-            <option value="">All</option>
-            {% for pos in pos_data %}
-            <option value="{{ pos.pos_id }}">{{ pos.pos_id }}</option>
-            {% endfor %}
-        </select>
-
-        <label for="filterPosNameCreate">POS Name:</label>
-        <select id="filterPosNameCreate" class="form-select">
-            <option value="">All</option>
-            {% for pos in pos_data %}
-            <option value="{{ pos.pos_name }}">{{ pos.pos_name }}</option>
-            {% endfor %}
-        </select>
-
-        <!-- Clear Filter Button -->
-        <button id="clearFilterBtnCreate" class="btn btn-warning" style="margin-top: 10px;">Clear Filter</button>
+            <!-- All Tasks Table -->
+            <h2>All Tasks</h2>
+            {% include "_tasks_body.html" %} <!-- Only includes the tasks table, no filters -->
+        </div>
     </div>
-
-    <!-- Tasks Table -->
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Task ID</th>
-                <th>POS ID</th>
-                <th>POS Name</th>
-                <th>Reconciliation Date</th>
-                <th>Certified</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Start Date</th>
-                <th>Due Date</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody id="taskTableBodyCreate">
-            <!-- Tasks will be loaded dynamically here -->
-        </tbody>
-    </table>
-
-    <script>
-        // Copy of taskFilter.js modified for create.html
-        document.addEventListener('DOMContentLoaded', function () {
-            const filterButton = document.getElementById('filterBtnCreate');
-            const filterSection = document.getElementById('filterSectionCreate');
-            const posIdDropdown = document.getElementById('filterPosIDCreate');
-            const posNameDropdown = document.getElementById('filterPosNameCreate');
-            const taskTableBody = document.getElementById('taskTableBodyCreate');
-            const clearFilterButton = document.getElementById('clearFilterBtnCreate');
-            const taskSearch = document.getElementById('taskSearchCreate');
-
-            // Show/hide the filter section when the filter button is clicked
-            filterButton.addEventListener('click', function () {
-                if (filterSection.style.display === 'none' || !filterSection.style.display) {
-                    filterSection.style.display = 'block';
-                } else {
-                    filterSection.style.display = 'none';
-                }
-            });
-
-            // Function to fetch and display tasks based on selected filters
-            function fetchTasks() {
-                const posId = posIdDropdown.value;
-                const posName = posNameDropdown.value;
-                const searchQuery = taskSearch.value;
-
-                fetch('/filter_tasks', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        pos_id: posId,
-                        pos_name: posName,
-                        search_query: searchQuery
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    // Clear the current table
-                    taskTableBody.innerHTML = '';
-
-                    // Populate the table with the filtered tasks
-                    data.tasks.forEach(task => {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${task.task_id}</td>
-                            <td>${task.pos_id}</td>
-                            <td>${task.pos_name}</td>
-                            <td>${task.reconciliation_date}</td>
-                            <td>${task.certified}</td>
-                            <td>${task.description}</td>
-                            <td>${task.status}</td>
-                            <td>${task.priority}</td>
-                            <td>${task.start_date}</td>
-                            <td>${task.due_date}</td>
-                            <td>${task.notes}</td>
-                        `;
-                        taskTableBody.appendChild(row);
-                    });
-                });
-            }
-
-            // Fetch tasks when the dropdown values change
-            posIdDropdown.addEventListener('change', function() {
-                posNameDropdown.selectedIndex = 0;  // Reset the POS Name dropdown
-                fetchTasks();
-            });
-
-            posNameDropdown.addEventListener('change', function() {
-                posIdDropdown.selectedIndex = 0;  // Reset the POS ID dropdown
-                fetchTasks();
-            });
-
-            // Fetch tasks when the search field is used
-            taskSearch.addEventListener('input', fetchTasks);
-
-            // Clear filters and show all tasks when the "Clear Filter" button is clicked
-            clearFilterButton.addEventListener('click', function () {
-                posIdDropdown.selectedIndex = 0;
-                posNameDropdown.selectedIndex = 0;
-                taskSearch.value = '';
-                fetchTasks();  // Fetch all tasks
-            });
-
-            // Initial task loading via AJAX
-            fetchTasks();
-        });
-    </script>
+</div>
 {% endblock %}

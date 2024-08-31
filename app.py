@@ -1,11 +1,12 @@
-from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
-from sqlalchemy import create_engine, MetaData, Table, select, func, and_, or_
+from flask import Flask, flash, redirect, render_template, request, session, jsonify
+from sqlalchemy import create_engine, MetaData, Table, select, func, and_, or_, desc
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions
 from helpers import apology, login_required
-from datetime import date
-import logging
+from datetime import date, datetime  # Import datetime for strptime
+import logging, traceback
+
 
 # Configure application
 app = Flask(__name__)
@@ -154,7 +155,7 @@ def tasks():
             .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
             .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
             .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
-        )
+        ).order_by(desc(tasks_table.c.task_id))  # Order by task_id descending
 
         # Execute query and fetch all tasks
         tasks = conn.execute(query).fetchall()
@@ -183,7 +184,6 @@ def tasks():
 
     logger.debug("Formatted tasks for display: %s", formatted_tasks)
     return render_template("tasks.html", tasks=formatted_tasks, pos_data=pos_data, date=date)
-
 
 @app.route("/filter_tasks", methods=["POST"])
 @login_required
@@ -268,6 +268,9 @@ def filter_tasks():
         if conditions:
             query = query.where(and_(*conditions))
 
+        # Order by task_id descending to get the newest tasks first
+        query = query.order_by(desc(tasks_table.c.task_id))
+
         app.logger.debug(f"Executing query with conditions: {str(query)}")  # Log the complete SQL query
 
         # Execute query and fetch tasks
@@ -295,6 +298,96 @@ def filter_tasks():
 
     app.logger.debug(f"Returning tasks list to client: {tasks_list}")  # Log the final tasks list sent to the client
     return jsonify(tasks=tasks_list)
+
+@app.route("/create", methods=["GET", "POST"])
+@login_required
+def create_task():
+    """
+    Handle the creation of a new task.
+    """
+    if request.method == "POST":
+        # Get form data
+        pos_id = request.form.get("pos_id")
+        pos_name = request.form.get("pos_name")
+
+        # Optional fields
+        reconciliation_date = request.form.get("reconciliation_date") or None
+        certified = request.form.get("certified") or None
+        description = request.form.get("description") or None
+        status = request.form.getlist("status")  # Get list of selected statuses
+        priority = request.form.getlist("priority")  # Get list of selected priorities
+        start_date = request.form.get("start_date") or None
+        due_date = request.form.get("due_date") or None
+        notes = request.form.get("notes") or None
+        blocker_desc = request.form.get("blocker_desc") or None
+        blocker_responsible = request.form.get("blocker_responsible") or None
+
+        # Convert date strings to Python date objects if present
+        try:
+            if start_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            if due_date:
+                due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
+            if reconciliation_date:
+                reconciliation_date = datetime.strptime(reconciliation_date, '%Y-%m-%d').date()
+        except ValueError as e:
+            flash("Invalid date format. Please use YYYY-MM-DD.")
+            return redirect("/create")
+
+        # Validate required fields
+        if not pos_id or not pos_name:
+            flash("POS ID and POS Name are required.")
+            return redirect("/create")
+
+        # Insert the new task into the database
+        try:
+            with engine.connect() as conn:
+                # Insert the new task into the tasks table
+                task_insert = tasks_table.insert().values(
+                    pos_id=pos_id,
+                    task_desc=description,
+                    task_status=','.join(status) if status else None,
+                    task_priority=','.join(priority) if priority else None,
+                    task_start_date=start_date,
+                    task_due_date=due_date,
+                    task_notes=notes
+                )
+                result = conn.execute(task_insert)
+                task_id = result.inserted_primary_key[0]  # Get the inserted task ID
+
+                # Insert the related blocker information if provided
+                if blocker_desc or blocker_responsible:
+                    conn.execute(blockers_table.insert().values(
+                        blocker_desc=blocker_desc,
+                        blocker_responsible=blocker_responsible,
+                        task_id=task_id  # Assuming you want to link it with the new task
+                    ))
+
+                # Insert reconciliation information into rec_table if needed
+                if reconciliation_date or certified:
+                    conn.execute(rec_table.insert().values(
+                        rec_date=reconciliation_date,
+                        rec_certified=(certified == 'true') if certified else None,
+                        task_id=task_id
+                    ))
+
+                conn.commit()
+            flash("Task created successfully!")
+        except Exception as e:
+            logger.error(f"Error creating task: {e}")
+            flash("An error occurred while creating the task.")
+            return redirect("/create")
+
+        return redirect("/tasks")
+    else:
+        # Fetch POS data and Blockers data for the form dropdown
+        with engine.connect() as conn:
+            pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+            blockers_data = conn.execute(select(blockers_table.c.blocker_desc, blockers_table.c.blocker_responsible)).fetchall()
+
+        # Pass 'date' to the template for rendering date inputs
+        return render_template("create.html", pos_data=pos_data, blockers_data=blockers_data, date=date)
+
 
 def errorhandler(e):
     """

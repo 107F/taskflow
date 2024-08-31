@@ -1,0 +1,135 @@
+<div class="container-fluid">
+    <div class="row">
+        <!-- Main Content Area -->
+        <div class="col-md-9">
+            <!-- Create Task Form -->
+            <form action="/create" method="post" id="createTaskForm">
+                <div class="row">
+                    <!-- Column 1 -->
+                    <div class="col-md-4">
+                        <!-- POS Name Selection -->
+                        <div class="mb-3">
+                            <label for="pos_name" class="form-label">POS Name:</label>
+                            <select id="pos_name" class="form-control" name="pos_name" required>
+                                <option value="" disabled selected>Select POS Name</option>
+                                {% for pos in pos_data %}
+                                    <option value="{{ pos['pos_name'] }}" data-pos-id="{{ pos['pos_id'] }}">{{ pos['pos_name'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- POS ID Selection -->
+                        <div class="mb-3">
+                            <label for="pos_id" class="form-label">POS ID:</label>
+                            <select id="pos_id" class="form-control" name="pos_id" required>
+                                <option value="" disabled selected>Select POS ID</option>
+                                {% for pos in pos_data %}
+                                    <option value="{{ pos['pos_id'] }}" data-pos-name="{{ pos['pos_name'] }}">{{ pos['pos_id'] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Reconciliation Date (Optional) -->
+                        <div class="mb-3">
+                            <label for="reconciliation_date" class="form-label">Reconciliation Date:</label>
+                            <input id="reconciliation_date" class="form-control" name="reconciliation_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
+                        </div>
+
+                        <!-- Certified (Optional) -->
+                        <div class="mb-3">
+                            <label class="form-label">Certified:</label>
+                            <div>
+                                <input type="checkbox" id="certified_true" name="certified" value="true"> True
+                            </div>
+                            <div>
+                                <input type="checkbox" id="certified_false" name="certified" value="false"> False
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Column 2 -->
+                    <div class="col-md-4">
+                        <!-- Status Checkboxes (Optional) -->
+                        <div class="mb-3">
+                            <label class="form-label">Status:</label>
+                            <div>
+                                <input type="checkbox" id="statusBacklog" name="status" value="Backlog"> Backlog
+                            </div>
+                            <div>
+                                <input type="checkbox" id="statusToDo" name="status" value="To Do"> To Do
+                            </div>
+                            <div>
+                                <input type="checkbox" id="statusInProgress" name="status" value="In Progress"> In Progress
+                            </div>
+                            <div>
+                                <input type="checkbox" id="statusDone" name="status" value="Done"> Done
+                            </div>
+                        </div>
+
+                        <!-- Priority Checkboxes (Optional) -->
+                        <div class="mb-3">
+                            <label class="form-label">Priority:</label>
+                            <div>
+                                <input type="checkbox" id="priorityNone" name="priority" value="None"> None
+                            </div>
+                            <div>
+                                <input type="checkbox" id="priorityLow" name="priority" value="Low"> Low
+                            </div>
+                            <div>
+                                <input type="checkbox" id="priorityMedium" name="priority" value="Medium"> Medium
+                            </div>
+                            <div>
+                                <input type="checkbox" id="priorityHigh" name="priority" value="High"> High
+                            </div>
+                        </div>
+
+                        <!-- Start Date (Optional) -->
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label">Start Date:</label>
+                            <input id="start_date" class="form-control" name="start_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
+                        </div>
+
+                        <!-- Due Date (Optional) -->
+                        <div class="mb-3">
+                            <label for="due_date" class="form-label">Due Date:</label>
+                            <input id="due_date" class="form-control" name="due_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
+                        </div>
+                    </div>
+
+                    <!-- Column 3 -->
+                    <div class="col-md-4">
+                        <!-- Task Description (Optional) -->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Task Description:</label>
+                            <textarea id="description" class="form-control" name="description"></textarea>
+                        </div>
+
+                        <!-- Blocker Description (Optional) -->
+                        <div class="mb-3">
+                            <label for="blocker_desc" class="form-label">Blocker Description:</label>
+                            <textarea id="blocker_desc" class="form-control" name="blocker_desc"></textarea>
+                        </div>
+
+                        <!-- Blocker Responsible (Optional) -->
+                        <div class="mb-3">
+                            <label for="blocker_responsible" class="form-label">Blocker Responsible:</label>
+                            <textarea id="blocker_responsible" class="form-control" name="blocker_responsible"></textarea>
+                        </div>
+
+                        <!-- Additional Notes (Optional) -->
+                        <div class="mb-3">
+                            <label for="notes" class="form-label">Additional Notes:</label>
+                            <textarea id="notes" class="form-control" name="notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button class="btn btn-primary" type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Include the JavaScript file -->
+<script src="{{ url_for('static', filename='js/createTasks.js') }}"></script>
