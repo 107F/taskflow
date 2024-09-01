@@ -231,7 +231,7 @@ def filter_tasks():
 @login_required
 def create_task():
     """
-    Handle the creation of a new task.
+    Handle the creation of a new task or display the create task page with existing tasks.
     """
     if request.method == "POST":
         # Get form data
@@ -322,12 +322,55 @@ def create_task():
 
         return redirect("/tasks")
     else:
-        # Fetch POS data and Blockers data for the form dropdown
+        # Fetch POS data for the form dropdown
         with engine.connect() as conn:
             pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
 
-        # Pass 'date' to the template for rendering date inputs
-        return render_template("create.html", pos_data=pos_data, date=date)
+            # Fetch tasks similarly to the `/tasks` route to display them on the create page
+            query = select(
+                tasks_table.c.task_id,
+                tasks_table.c.task_desc,
+                tasks_table.c.task_status,
+                tasks_table.c.task_priority,
+                tasks_table.c.task_start_date,
+                tasks_table.c.task_due_date,
+                tasks_table.c.task_notes,
+                pos_table.c.pos_id,
+                pos_table.c.pos_name,
+                rec_table.c.rec_date,
+                rec_table.c.rec_certified,
+                blockers_table.c.blocker_desc,
+                blockers_table.c.blocker_responsible
+            ).select_from(
+                tasks_table
+                .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+                .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+                .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+            ).order_by(desc(tasks_table.c.task_id))
+
+            tasks = conn.execute(query).fetchall()
+
+            # Format tasks for rendering in template
+            formatted_tasks = []
+            for task in tasks:
+                formatted_tasks.append({
+                    "task_id": task.task_id if task.task_id is not None else "n/a",
+                    "task_desc": task.task_desc if task.task_desc is not None else "n/a",
+                    "task_status": task.task_status if task.task_status is not None else "n/a",
+                    "task_priority": task.task_priority if task.task_priority is not None else "n/a",
+                    "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if isinstance(task.task_start_date, date) else "n/a",
+                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if isinstance(task.task_due_date, date) else "n/a",
+                    "task_notes": task.task_notes if task.task_notes is not None else "n/a",
+                    "pos_id": task.pos_id if task.pos_id is not None else "n/a",
+                    "pos_name": task.pos_name if task.pos_name is not None else "n/a",
+                    "rec_date": task.rec_date.strftime('%Y-%m-%d') if isinstance(task.rec_date, date) else "n/a",
+                    "rec_certified": "Yes" if task.rec_certified is True else "No" if task.rec_certified is False else "n/a",
+                    "blocker_desc": task.blocker_desc if task.blocker_desc is not None else "n/a",
+                    "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
+                })
+
+        # Render the create.html with tasks and POS data
+        return render_template("create.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
 
 def errorhandler(e):
     """Handle errors by returning a custom error message."""
