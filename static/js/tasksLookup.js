@@ -1,20 +1,3 @@
-/**
- * tasksLookup.js
- * 
- * This JavaScript file is responsible for handling the front-end functionality of the task filtering system
- * in the TaskFlow application. It provides the logic to fetch and display tasks based on various filters
- * including search queries, POS ID, POS Name, date ranges, status, and priority. The script also initializes
- * certain elements and handles user interactions like typing in the search bar, clicking filter buttons, and
- * clearing filters. The script makes AJAX requests to the server to fetch filtered data and updates the task
- * display table dynamically without requiring a full page reload.
- * 
- * Key Functions:
- * - Fetch and display tasks based on user input.
- * - Manage filter inputs and apply appropriate filters.
- * - Initialize date inputs and manage placeholder logic for date fields.
- * - Handle user interactions like filtering and clearing filters.
- */
-
 document.addEventListener("DOMContentLoaded", function () {
     // Get references to DOM elements that are frequently used
     const taskSearchInput = document.getElementById("taskSearch");
@@ -41,6 +24,24 @@ document.addEventListener("DOMContentLoaded", function () {
         const dd = String(today.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
     }
+
+    // Initialize placeholders with today's date
+    const todayDate = getTodayDate();
+
+    /**
+     * setDateInputPlaceholders
+     * 
+     * Resets the placeholders and values of the start and end date input fields to today's date.
+     */
+    function setDateInputPlaceholders() {
+        startDateInput.value = todayDate; // Reset value to today's date
+        endDateInput.value = todayDate;   // Reset value to today's date
+        startDateInput.placeholder = todayDate; // Also set the placeholder
+        endDateInput.placeholder = todayDate;   // Also set the placeholder
+    }
+
+    // Call the function to initialize the date placeholders and values on page load
+    setDateInputPlaceholders();
 
     /**
      * getSelectedCheckboxValues
@@ -90,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <td>${task.pos_id || 'n/a'}</td>
                         <td>${task.pos_name || 'n/a'}</td>
                         <td>${task.rec_date || 'n/a'}</td>
-                        <td>${task.rec_certified || 'n/a'}</td> <!-- Render "Yes", "No", or "n/a" -->
+                        <td>${task.rec_certified || 'n/a'}</td>
                         <td>${task.task_desc || 'n/a'}</td>
                         <td>${task.task_status || 'n/a'}</td>
                         <td>${task.task_priority || 'n/a'}</td>
@@ -136,8 +137,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
         const searchQuery = taskSearchInput.value;
-        const startDate = startDateInput.value !== getTodayDate() ? startDateInput.value : null; // Only filter if date is changed
-        const endDate = endDateInput.value !== getTodayDate() ? endDateInput.value : null; // Only filter if date is changed
+        const startDate = startDateInput.value !== todayDate ? startDateInput.value : null; // Only filter if date is changed
+        const endDate = endDateInput.value !== todayDate ? endDateInput.value : null; // Only filter if date is changed
 
         // Get selected statuses and priorities
         const selectedStatuses = getSelectedCheckboxValues("input[id^='status']");
@@ -175,8 +176,9 @@ document.addEventListener("DOMContentLoaded", function () {
         posIDSelect.value = "";
         posNameSelect.value = "";
         taskSearchInput.value = "";
-        startDateInput.value = getTodayDate(); // Reset to today's date
-        endDateInput.value = getTodayDate(); // Reset to today's date
+
+        // Reset placeholders and values for date inputs
+        setDateInputPlaceholders();
 
         // Uncheck all status and priority checkboxes
         document.querySelectorAll("input[id^='status'], input[id^='priority']").forEach(checkbox => {
@@ -197,14 +199,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    /**
-     * Initialize date fields on page load
-     * 
-     * Sets the date input fields to today's date initially, treating them as placeholders.
-     */
-    startDateInput.value = getTodayDate();
-    endDateInput.value = getTodayDate();
-
-    console.log("Page loaded - Start Date set to:", startDateInput.value,
-        "End Date set to:", endDateInput.value); // Debugging: Log initial date values
+    console.log("Page loaded - Start Date placeholder set to:", startDateInput.placeholder,
+        "End Date placeholder set to:", endDateInput.placeholder); // Debugging: Log initial placeholder values
 });
