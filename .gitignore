@@ -1,23 +1,117 @@
-# Ignore Python bytecode files
-*.pyc
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
 
-# Ignore log files
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+testmondata
+
+# Translations
+*.mo
+*.pot
+
+# Flask cache and logs
+instance/
+.webassets-cache
 *.log
 
-# Ignore virtual environment directories
-venv/
+# Flask specific
 env/
+venv/
+ENV/
+env.bak/
+venv.bak/
 
-# Ignore system files
-.DS_Store
-Thumbs.db
-
-# Ignore IDE or editor-specific files
+# IDEs and editors
 .vscode/
 .idea/
 *.swp
+*~
+.project
+.pydevproject
+.DS_Store
 
-# Ignore build output directories
-build/
-dist/
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Python virtual environments
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Pyre type checker
+.pyre/
+
+# Local database files (if any)
+*.sqlite3
+*.db
+*.sql
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# dotenv environment variables file
+.env
+
+# Celery task queue
+celerybeat-schedule
+
+# Sphinx documentation
+docs/_build/
