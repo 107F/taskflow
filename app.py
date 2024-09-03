@@ -8,6 +8,7 @@ from werkzeug.exceptions import default_exceptions
 from helpers import apology, login_required
 from datetime import date, datetime
 import logging
+import traceback
 
 # Configure application
 app = Flask(__name__)
@@ -56,6 +57,85 @@ SessionLocal = sessionmaker(bind=engine)
 def index():
     """Redirect to the tasks page as the homepage."""
     return redirect("/tasks")
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """
+    Register a new user by collecting username and password inputs.
+    Handles form validation, password hashing, and user registration in the database.
+    """
+    if request.method == "POST":
+        # Validate form inputs
+        if not request.form.get("username"):
+            return apology("must provide username", 400)
+        elif not request.form.get("password"):
+            return apology("must provide password", 400)
+        elif request.form.get("password") != request.form.get("confirmation"):
+            return apology("passwords do not match", 400)
+
+        # Hash the user's password
+        hash_pw = generate_password_hash(request.form.get("password"))
+
+        # Insert new user into the database
+        try:
+            with engine.connect() as conn:
+                conn.execute(users_table.insert().values(username=request.form.get("username"), password_hash=hash_pw))
+                conn.commit()
+            flash("Registration successful! Please log in.")
+        except Exception as e:
+            logger.error(f"Error during registration: {e}")  # Logging error
+            return apology("username already exists", 400)
+
+        return redirect("/login")
+    else:
+        return render_template("register.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """
+    Log the user in by checking username and password.
+    Clears any existing user session and sets a new session on successful login.
+    """
+    # Clear any existing user session
+    session.clear()
+
+    if request.method == "POST":
+        # Ensure username and password are provided
+        if not request.form.get("username"):
+            flash("Must provide username")
+            return redirect("/login")
+        if not request.form.get("password"):
+            flash("Must provide password")
+            return redirect("/login")
+
+        # Query database for username
+        with engine.connect() as conn:
+            query = select(users_table.c.user_id, users_table.c.username, users_table.c.password_hash).where(users_table.c.username == request.form.get("username"))
+            rows = conn.execute(query).fetchall()
+
+        # Validate username and password
+        if len(rows) != 1:
+            flash("Username does not exist. Please register.")
+            return redirect("/register")
+        elif not check_password_hash(rows[0][2], request.form.get("password")):
+            flash("Incorrect password. Please try again.")
+            return redirect("/login")
+
+        # Remember which user has logged in
+        session["user_id"] = rows[0][0]
+        flash("Logged in successfully!")
+        return redirect("/tasks")
+    else:
+        return render_template("login.html")
+
+@app.route("/logout")
+def logout():
+    """
+    Log the user out by clearing the session data.
+    """
+    session.clear()
+    flash("You have been logged out.")
+    return redirect("/login")
 
 @app.route("/tasks")
 @login_required
