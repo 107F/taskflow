@@ -1,0 +1,65 @@
+.
+├── C:\Users\micro\Downloads\final\tasks.db
+├── C__
+│   └── Users
+│       └── micro
+│           └── Downloads
+│               └── final
+│                   └── tasks.db
+├── README.md
+├── __pycache__
+│   ├── app.cpython-310.pyc
+│   └── helpers.cpython-310.pyc
+├── app.log
+├── app.py
+├── db_foreignkeys_update.py
+├── db_notnull_update.py
+├── db_setup.py
+├── del_dev_HELPERS
+│   ├── TaskFlow-Tasks-screenclip1.png
+│   └── db_schema.txt
+├── flask_session
+│   ├── 00c6e53ddd4282b56027e7a75655bd85
+│   ├── 115b8d1c96b0cb912808c4b8fd89e7ad
+│   ├── 2029240f6d1128be89ddc32729463129
+│   ├── 25c1bd5a07156187c7b0beed0a1614fd
+│   ├── 3384a545330177f20598584fc4ebfec4
+│   ├── 40dd680e8b8ffe1cbcd4bd5d3ca650c3
+│   ├── 443cfce86d641e5456893efda28b5643
+│   ├── 55e12fc15fbda0f54ced11c299115879
+│   ├── 799e423e099248571fee7c4346753d29
+│   ├── 812dac17609fb16bb678d4af000c9cdc
+│   ├── 87eafa91e2f3a41a08836488b73f997c
+│   ├── 98317db603d3d75d953039b897e5f565
+│   ├── a440f90a8f56189a7f61483c8184f41a
+│   ├── d404270ce7367bd70c451d8a1ece16fe
+│   └── f57e7d336403e4d448a9c495e4ed1e0d
+├── helpers.py
+├── kb.csv
+├── requirements.txt
+├── static
+│   ├── css
+│   │   └── style.css
+│   ├── images
+│   └── js
+│       ├── createTasks.js
+│       ├── kanban.js
+│       └── tasksLookup.js
+├── structure.txt
+├── taskflow - Copy.db
+├── taskflow.db
+├── taskflowold.db
+└── templates
+    ├── _create_form.html
+    ├── _sidebar.html
+    ├── _tasks_body.html
+    ├── create.html
+    ├── error.html
+    ├── kanban.html
+    ├── layout.html
+    ├── login.html
+    ├── modify.html
+    ├── register.html
+    └── tasks.html
+
+13 directories, 49 files

@@ -1,0 +1,253 @@
+/* General styles for the entire page */
+body {
+    font-family: Arial, sans-serif !important;
+    background-color: #f8f9fa !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    text-align: left !important;
+}
+
+/* Navbar styles */
+.navbar {
+    background-color: #f8f9fa !important;
+    color: black !important;
+    border-bottom: 1px solid #ddd !important;
+}
+
+.navbar a {
+    color: black !important;
+    font-weight: 500 !important;
+    text-align: left !important;
+}
+
+.navbar a:hover {
+    color: #007bff !important;
+}
+
+.navbar .navbar-nav .nav-link {
+    color: black !important;
+}
+
+.navbar-brand {
+    color: black !important;
+}
+
+.navbar .btn {
+    background-color: #007bff !important;
+    border: none !important;
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    font-size: 16px !important;
+    text-align: left !important;
+}
+
+.navbar .btn:hover {
+    background-color: #0056b3 !important;
+    color: white !important;
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #007bff !important;
+    border: none !important;
+    color: white !important;
+    text-align: left !important;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3 !important;
+    color: white !important;
+}
+
+/* Styling for the main container element */
+.container {
+    margin-top: 20px !important;
+    text-align: left !important;
+}
+
+/* Form input styles (text fields, password fields, text areas, and select boxes) */
+input[type="text"],
+input[type="password"],
+textarea,
+select {
+    width: 100% !important;
+    padding: 8px !important;
+    margin-bottom: 10px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    text-align: left !important;
+}
+
+/* Styles for input elements when they are focused (clicked into) */
+input[type="text"]:focus,
+input[type="password"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #007bff !important;
+    text-align: left !important;
+}
+
+/* Table styles for consistent table formatting across the application */
+.table {
+    width: 100% !important;
+    margin-bottom: 20px !important;
+    border-collapse: collapse !important;
+    text-align: left !important;
+}
+
+.table th,
+.table td {
+    padding: 12px !important;
+    text-align: left !important;
+    border-bottom: 1px solid #ddd !important;
+    vertical-align: top !important;
+    white-space: normal !important;
+}
+
+.table th {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+.table tr:hover {
+    background-color: #f1f1f1 !important;
+}
+
+/* Styles for the "Notes" column to control its width and text wrapping */
+.notes-column {
+    width: 40em !important;
+    min-width: 30em !important;
+    max-width: 40em !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}
+
+/* Ensures tables can be scrolled horizontally on smaller screens */
+.table-responsive {
+    overflow-x: auto !important;
+    text-align: left !important;
+}
+
+/* Additional padding for task container */
+.tasks-wrapper {
+    padding: 15px !important;
+    text-align: left !important;
+}
+
+/* Styles for the Kanban board layout */
+.kanban-board {
+    display: flex !important;
+    justify-content: space-between !important;
+    margin-top: 20px !important;
+    text-align: left !important;
+}
+
+.kanban-column {
+    width: 23% !important;
+    background-color: #e9ecef !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+    border: 1px solid #ddd !important;
+    text-align: left !important;
+}
+
+.kanban-column h2 {
+    font-size: 18px !important;
+    margin-top: 0 !important;
+    margin-bottom: 15px !important;
+    text-align: left !important;
+}
+
+.kanban-card {
+    background-color: white !important;
+    padding: 10px !important;
+    border-radius: 5px !important;
+    margin-bottom: 10px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    cursor: pointer !important;
+    text-align: left !important;
+}
+
+/* Filter Sidebar Styling */
+.filter-group {
+    margin-bottom: 16px !important;
+    text-align: left !important;
+}
+
+.filter-title {
+    font-size: 1.5em !important;
+    margin-bottom: 10px !important;
+    text-align: left !important;
+}
+
+.filter-label {
+    display: block !important;
+    margin-bottom: 5px !important;
+    font-weight: bold !important;
+    text-align: left !important;
+}
+
+.filter-buttons {
+    display: flex !important;
+    gap: 10px !important;
+    text-align: left !important;
+}
+
+/* Adjust for date picker to have a consistent appearance */
+input[type="date"] {
+    width: 100% !important;
+    text-align: left !important;
+}
+
+/* General form input styling */
+.form-control {
+    width: 100% !important;
+    padding: 8px !important;
+    margin-bottom: 10px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    text-align: left !important;
+}
+
+/* Labels styling for consistency */
+.form-label {
+    font-weight: bold !important;
+    display: block !important;
+    margin-bottom: 5px !important;
+    text-align: left !important;
+}
+
+/* Button styling for submit */
+.btn-primary {
+    background-color: #007bff !important;
+    border: none !important;
+    color: white !important;
+    padding: 10px 20px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    text-align: left !important;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3 !important;
+    color: white !important;
+}
+
+/* Additional styling for the form container */
+.form-group {
+    margin-bottom: 20px !important;
+    text-align: left !important;
+}
+
+/* Ensure text areas are resizable vertically and have consistent styling */
+textarea {
+    resize: vertical !important;
+    overflow: auto !important;
+    width: 100% !important;
+    padding: 8px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    text-align: left !important;
+}
+

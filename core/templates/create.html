@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Create Task
+{% endblock %}
+
+{% block main %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            {% include "_sidebar.html" %} <!-- Include sidebar for filters right after the navbar -->
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="col-md-9">
+            <h1>Create Task</h1>
+
+            <!-- Include Create Task Form -->
+            {% include "_create_form.html" %}
+            
+            <hr>
+
+            <!-- All Tasks Table -->            
+            {% include "_tasks_body.html" %} <!-- Only includes the tasks table, no filters -->
+        </div>
+    </div>
+</div>
+{% endblock %}
