@@ -1,0 +1,23 @@
+<!-- _modify_form.html -->
+<div class="row">
+    <!-- Task ID Input for Fetching Details -->
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="task_id" class="form-label">Task ID:</label>
+            <input id="task_id" class="form-control" name="task_id" type="text" placeholder="Enter Task ID">
+        </div>
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-secondary" type="button" id="fetchTaskBtn">Fill In</button>
+    </div>
+</div>
+
+<form action="/modify" method="post" id="modifyTaskForm">
+    <!-- The rest of the form fields will be similar to create page -->
+    {% include "_create_form.html" %}
+    <!-- Modify Button -->
+    <button class="btn btn-primary" type="submit">Modify</button>
+</form>
+
+<!-- Include the JavaScript file for modify functionality -->
+<script src="{{ url_for('static', filename='js/modifyTasks.js') }}"></script>

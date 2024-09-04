@@ -451,6 +451,171 @@ def create_task():
 
         # Render the create.html with tasks and POS data
         return render_template("create.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
+    
+@app.route("/modify", methods=["GET", "POST"])
+@login_required
+def modify_task():
+    """
+    Handle the modification of an existing task or display the modify task page with existing tasks.
+    """
+    if request.method == "POST":
+        # Get form data
+        task_id = request.form.get("task_id")
+        pos_id = request.form.get("pos_id")
+
+        # Optional fields
+        reconciliation_date = request.form.get("reconciliation_date") or None
+        certified = request.form.get("certified") or None
+        description = request.form.get("description") or None
+        status = request.form.get("status") or None
+        priority = request.form.get("priority") or None
+        start_date = request.form.get("start_date") or None
+        due_date = request.form.get("due_date") or None
+        notes = request.form.get("notes") or None
+        blocker_desc = request.form.get("blocker_desc") or None
+        blocker_responsible = request.form.get("blocker_responsible") or None
+
+        # Convert date strings to Python date objects if present
+        try:
+            if start_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            if due_date:
+                due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
+            if reconciliation_date:
+                reconciliation_date = datetime.strptime(reconciliation_date, '%Y-%m-%d').date()
+        except ValueError as e:
+            flash("Invalid date format. Please use YYYY-MM-DD.")
+            return redirect("/modify")
+
+        # Validate required fields
+        if not task_id or not pos_id:
+            flash("Task ID and POS ID are required.")
+            return redirect("/modify")
+
+        try:
+            with engine.connect() as conn:
+                # Update the task in the tasks table
+                task_update = tasks_table.update().where(tasks_table.c.task_id == task_id).values(
+                    pos_id=pos_id,
+                    task_desc=description,
+                    task_status=status,
+                    task_priority=priority,
+                    task_start_date=start_date,
+                    task_due_date=due_date,
+                    task_notes=notes
+                )
+                conn.execute(task_update)
+
+                # Update the related blocker information if provided
+                if blocker_desc or blocker_responsible:
+                    # Check if blocker already exists for this task
+                    blocker_exists = conn.execute(
+                        select(blockers_table.c.blocker_id).where(blockers_table.c.task_id == task_id)
+                    ).fetchone()
+
+                    if blocker_exists:
+                        # Update existing blocker
+                        conn.execute(
+                            blockers_table.update().where(blockers_table.c.task_id == task_id).values(
+                                blocker_desc=blocker_desc,
+                                blocker_responsible=blocker_responsible
+                            )
+                        )
+                    else:
+                        # Insert new blocker if it doesn't exist
+                        conn.execute(
+                            blockers_table.insert().values(
+                                blocker_desc=blocker_desc,
+                                blocker_responsible=blocker_responsible,
+                                task_id=task_id,
+                                pos_id=pos_id
+                            )
+                        )
+
+                # Update reconciliation information if needed
+                if reconciliation_date or certified is not None:
+                    # Check if reconciliation already exists for this task
+                    rec_exists = conn.execute(
+                        select(rec_table.c.rec_id).where(rec_table.c.task_id == task_id)
+                    ).fetchone()
+
+                    if rec_exists:
+                        # Update existing reconciliation
+                        conn.execute(
+                            rec_table.update().where(rec_table.c.task_id == task_id).values(
+                                rec_date=reconciliation_date,
+                                rec_certified=(certified == 'true') if certified else None
+                            )
+                        )
+                    else:
+                        # Insert new reconciliation if it doesn't exist
+                        conn.execute(
+                            rec_table.insert().values(
+                                rec_date=reconciliation_date,
+                                rec_certified=(certified == 'true') if certified else None,
+                                task_id=task_id,
+                                pos_id=pos_id
+                            )
+                        )
+
+                conn.commit()
+            flash("Task modified successfully!")
+        except Exception as e:
+            logger.error(f"Error modifying task: {traceback.format_exc()}")
+            flash("An error occurred while modifying the task.")
+        return redirect("/modify")
+
+    else:
+        # Fetch POS data for the form dropdown
+        with engine.connect() as conn:
+            pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+
+            # Fetch tasks similarly to the `/tasks` route to display them on the modify page
+            query = select(
+                tasks_table.c.task_id,
+                tasks_table.c.task_desc,
+                tasks_table.c.task_status,
+                tasks_table.c.task_priority,
+                tasks_table.c.task_start_date,
+                tasks_table.c.task_due_date,
+                tasks_table.c.task_notes,
+                pos_table.c.pos_id,
+                pos_table.c.pos_name,
+                rec_table.c.rec_date,
+                rec_table.c.rec_certified,
+                blockers_table.c.blocker_desc,
+                blockers_table.c.blocker_responsible
+            ).select_from(
+                tasks_table
+                .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+                .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+                .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+            ).order_by(desc(tasks_table.c.task_id))
+
+            tasks = conn.execute(query).fetchall()
+
+            # Format tasks for rendering in template
+            formatted_tasks = []
+            for task in tasks:
+                formatted_tasks.append({
+                    "task_id": task.task_id if task.task_id is not None else "n/a",
+                    "task_desc": task.task_desc if task.task_desc is not None else "n/a",
+                    "task_status": task.task_status if task.task_status is not None else "n/a",
+                    "task_priority": task.task_priority if task.task_priority is not None else "n/a",
+                    "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if isinstance(task.task_start_date, date) else "n/a",
+                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if isinstance(task.task_due_date, date) else "n/a",
+                    "task_notes": task.task_notes if task.task_notes is not None else "n/a",
+                    "pos_id": task.pos_id if task.pos_id is not None else "n/a",
+                    "pos_name": task.pos_name if task.pos_name is not None else "n/a",
+                    "rec_date": task.rec_date.strftime('%Y-%m-%d') if isinstance(task.rec_date, date) else "n/a",
+                    "rec_certified": "Yes" if task.rec_certified is True else "No" if task.rec_certified is False else "n/a",
+                    "blocker_desc": task.blocker_desc if task.blocker_desc is not None else "n/a",
+                    "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
+                })
+
+        # Render the modify.html with tasks and POS data
+        return render_template("modify.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
+
 
 def errorhandler(e):
     """Handle errors by returning a custom error message."""

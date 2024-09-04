@@ -5,170 +5,25 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Modify Task</h1>
-    <form id="modifyTaskForm">
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="task_id" name="task_id" placeholder="Task ID to Modify" type="text" required>
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            {% include "_sidebar.html" %} <!-- Include sidebar for filters right after the navbar -->
         </div>
-        <div class="mb-3">
-            <select class="form-control mx-auto w-auto" id="pos_id" name="pos_id">
-                <option value="">Select POS ID (Optional)</option>
-                {% for pos in pos_data %}
-                    <option value="{{ pos.pos_id }}">{{ pos.pos_name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="reconciliation_date" name="reconciliation_date" placeholder="Reconciliation Date (YYYY-MM-DD)" type="text">
-        </div>
-        <div class="mb-3">
-            <select class="form-control mx-auto w-auto" id="certified" name="certified">
-                <option value="">Certified (Optional)</option>
-                <option value="true">True</option>
-                <option value="false">False</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <textarea class="form-control mx-auto w-auto" id="description" name="description" placeholder="Task Description"></textarea>
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="status" name="status" placeholder="Status (e.g., Backlog, In Progress, Done)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="priority" name="priority" placeholder="Priority (e.g., Low, Medium, High)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="start_date" name="start_date" placeholder="Start Date (YYYY-MM-DD)" type="text">
-        </div>
-        <div class="mb-3">
-            <input class="form-control mx-auto w-auto" id="due_date" name="due_date" placeholder="Due Date (YYYY-MM-DD)" type="text">
-        </div>
-        <div class="mb-3">
-            <textarea class="form-control mx-auto w-auto" id="notes" name="notes" placeholder="Additional Notes"></textarea>
-        </div>
-        <button class="btn btn-primary" type="submit">Modify</button>
-    </form>
 
-    <hr>
+        <!-- Main Content Area -->
+        <div class="col-md-9">
+            <h1>Modify Task</h1>
 
-    <h2>Task to Modify</h2>
-    
-    <!-- Flash Message -->
-    <div id="flash-message" class="alert alert-success" role="alert" style="display: none;">
-        Task updated successfully!
+            <!-- Include Modify Task Form -->
+            {% include "_modify_form.html" %}
+            
+            <hr>
+
+            <!-- All Tasks Table -->            
+            {% include "_tasks_body.html" %} <!-- Only includes the tasks table, no filters -->
+        </div>
     </div>
-
-    <!-- Task Table -->
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Task ID</th>
-                <th>POS ID</th>
-                <th>POS Name</th>
-                <th>Reconciliation Date</th>
-                <th>Certified</th>
-                <th>Description</th>
-                <th>Status</th>
-                <th>Priority</th>
-                <th>Start Date</th>
-                <th>Due Date</th>
-                <th>Notes</th>
-            </tr>
-        </thead>
-        <tbody id="taskTableBodyModify">
-            {% for task in tasks %}
-                <tr>
-                    <td>{{ task.task_id }}</td>
-                    <td>{{ task.pos_id }}</td>
-                    <td>{{ task.pos_name }}</td>
-                    <td>{{ task.reconciliation_date }}</td>
-                    <td>{{ task.certified }}</td>
-                    <td>{{ task.description }}</td>
-                    <td>{{ task.status }}</td>
-                    <td>{{ task.priority }}</td>
-                    <td>{{ task.start_date }}</td>
-                    <td>{{ task.due_date }}</td>
-                    <td>{{ task.notes }}</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const form = document.getElementById('modifyTaskForm');
-            const taskIdInput = document.getElementById('task_id');
-            const taskTableBody = document.getElementById('taskTableBodyModify');
-            const flashMessage = document.getElementById('flash-message');
-
-            // Function to fetch and display only the task with the specified task_id
-            function fetchTaskById(taskId) {
-                fetch(`/get_task/${taskId}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    taskTableBody.innerHTML = '';
-
-                    if (data.task) {
-                        const task = data.task;
-                        const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${task.task_id}</td>
-                            <td>${task.pos_id}</td>
-                            <td>${task.pos_name}</td>
-                            <td>${task.reconciliation_date}</td>
-                            <td>${task.certified}</td>
-                            <td>${task.description}</td>
-                            <td>${task.status}</td>
-                            <td>${task.priority}</td>
-                            <td>${task.start_date}</td>
-                            <td>${task.due_date}</td>
-                            <td>${task.notes}</td>
-                        `;
-                        taskTableBody.appendChild(row);
-                    } else {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `<td colspan="11">No task found with ID ${taskId}</td>`;
-                        taskTableBody.appendChild(row);
-                    }
-                });
-            }
-
-            // Event listener to fetch the task when task_id is entered
-            taskIdInput.addEventListener('change', function () {
-                const taskId = taskIdInput.value;
-                if (taskId) {
-                    fetchTaskById(taskId);
-                }
-            });
-
-            // Event listener to handle form submission for modification
-            form.addEventListener('submit', function (event) {
-                event.preventDefault(); // Prevent default form submission
-
-                const formData = new FormData(form);
-                const taskId = formData.get('task_id');
-
-                // Send AJAX request to update the task
-                fetch('/modify', {
-                    method: 'POST',
-                    body: new URLSearchParams(formData)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Show flash message
-                        flashMessage.style.display = 'block';
-
-                        // Fetch and display the updated task
-                        fetchTaskById(taskId);
-                    }
-                });
-            });
-        });
-    </script>
+</div>
 {% endblock %}
