@@ -7,16 +7,13 @@
             <input id="task_id" class="form-control" name="task_id" type="text" placeholder="Enter Task ID">
         </div>
     </div>
-    <div class="col-md-4">
-        <button class="btn btn-secondary" type="button" id="fetchTaskBtn">Fill In</button>
-    </div>
 </div>
 
-<form action="/modify" method="post" id="modifyTaskForm">
+<form id="modifyTaskForm">
     <!-- The rest of the form fields will be similar to create page -->
     {% include "_create_form.html" %}
     <!-- Modify Button -->
-    <button class="btn btn-primary" type="submit">Modify</button>
+    <button class="btn btn-primary" type="button" id="modifyBtn">Modify</button>
 </form>
 
 <!-- Include the JavaScript file for modify functionality -->

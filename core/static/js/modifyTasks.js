@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const fetchTaskBtn = document.getElementById("fetchTaskBtn");
     const taskIdInput = document.getElementById("task_id");
+    const modifyBtn = document.getElementById("modifyBtn");
 
     // Elements for POS selection
     const posNameSelect = document.getElementById("pos_name");
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const certifiedYesRadio = document.getElementById("certified_yes");
     const certifiedNoRadio = document.getElementById("certified_no");
 
-    // Function to synchronize POS fields based on the selection
+    // Function to synchronize POS fields based on selection
     function syncPosFields(event) {
         if (event.target === posNameSelect) {
             const selectedPosNameOption = posNameSelect.options[posNameSelect.selectedIndex];
@@ -25,9 +25,30 @@ document.addEventListener("DOMContentLoaded", function () {
     posNameSelect.addEventListener("change", syncPosFields);
     posIDSelect.addEventListener("change", syncPosFields);
 
-    // Fetch task data when the button is clicked
-    fetchTaskBtn.addEventListener("click", function () {
-        const taskId = taskIdInput.value;
+    // Function to clear all form fields
+    function clearFormFields() {
+        posNameSelect.value = "";
+        posIDSelect.value = "";
+        document.getElementById("description").value = "";
+        
+        // Clear all status and priority radio buttons
+        document.querySelectorAll('input[name="status"]').forEach(radio => radio.checked = false);
+        document.querySelectorAll('input[name="priority"]').forEach(radio => radio.checked = false);
+
+        document.getElementById("start_date").value = "";
+        document.getElementById("due_date").value = "";
+        document.getElementById("reconciliation_date").value = "";
+        document.getElementById("notes").value = "";
+        document.getElementById("blocker_desc").value = "";
+        document.getElementById("blocker_responsible").value = "";
+
+        // Clear certified radio buttons
+        certifiedYesRadio.checked = false;
+        certifiedNoRadio.checked = false;
+    }
+
+    // Function to fetch task data
+    function fetchTaskData(taskId) {
         if (taskId) {
             fetch(`/api/get_task/${taskId}`)
                 .then(response => {
@@ -78,7 +99,61 @@ document.addEventListener("DOMContentLoaded", function () {
                     alert('Error fetching task. Please check the console for more details.');
                 });
         } else {
-            alert("Please enter a Task ID.");
+            // Clear all fields if taskId is empty
+            clearFormFields();
         }
+    }
+
+    // Listen for changes in the task ID input field
+    taskIdInput.addEventListener("input", function () {
+        const taskId = taskIdInput.value.trim();
+        
+        // Trigger fetch only if the input is not empty
+        fetchTaskData(taskId);
+    });
+
+    // Function to modify task data
+    function modifyTaskData() {
+        const taskId = taskIdInput.value.trim();
+        if (!taskId) {
+            alert("Task ID is required to modify a task.");
+            return;
+        }
+
+        const formData = new FormData(document.getElementById("modifyTaskForm"));
+        const formObject = {};
+        formData.forEach((value, key) => formObject[key] = value);
+
+        fetch(`/api/modify_task/${taskId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formObject)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Network response was not ok");
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert("Task modified successfully!");
+                // Refresh the tasks table
+                window.location.reload(); // or fetch and re-render tasks dynamically
+            } else {
+                alert(data.message || "Failed to modify task.");
+            }
+        })
+        .catch(error => {
+            console.error('Error modifying task:', error);
+            alert('Error modifying task. Please check the console for more details.');
+        });
+    }
+
+    // Listen for clicks on the "Modify" button
+    modifyBtn.addEventListener("click", function () {
+        modifyTaskData();
     });
 });

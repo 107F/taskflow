@@ -686,4 +686,3 @@ for code in default_exceptions:
 
 if __name__ == "__main__":
     app.run(debug=False)  # Set debug to False to avoid detailed traceback in terminal
-    
