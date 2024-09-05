@@ -451,7 +451,65 @@ def create_task():
 
         # Render the create.html with tasks and POS data
         return render_template("create.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
-    
+
+@app.route("/api/get_task/<int:task_id>", methods=["GET"])
+@login_required
+def get_task(task_id):
+    """
+    Fetch the task details for a given task_id and return them as JSON.
+    """
+    try:
+        with engine.connect() as conn:
+            query = select(
+                tasks_table.c.task_id,
+                tasks_table.c.task_desc,
+                tasks_table.c.task_status,
+                tasks_table.c.task_priority,
+                tasks_table.c.task_start_date,
+                tasks_table.c.task_due_date,
+                tasks_table.c.task_notes,
+                pos_table.c.pos_id,
+                pos_table.c.pos_name,
+                rec_table.c.rec_date,
+                rec_table.c.rec_certified,
+                blockers_table.c.blocker_desc,
+                blockers_table.c.blocker_responsible
+            ).select_from(
+                tasks_table
+                .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+                .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+                .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+            ).where(tasks_table.c.task_id == task_id)
+
+            task = conn.execute(query).fetchone()
+
+            if task:
+                # Format the task details for JSON response
+                task_data = {
+                    "task_id": task.task_id,
+                    "task_desc": task.task_desc or "n/a",
+                    "task_status": task.task_status or "n/a",
+                    "task_priority": task.task_priority or "n/a",
+                    "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if task.task_start_date else "n/a",
+                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if task.task_due_date else "n/a",
+                    "task_notes": task.task_notes or "n/a",
+                    "pos_id": task.pos_id,
+                    "pos_name": task.pos_name,
+                    "rec_date": task.rec_date.strftime('%Y-%m-%d') if task.rec_date else "n/a",
+                    "rec_certified": "Yes" if task.rec_certified else "No" if task.rec_certified is not None else "n/a",
+                    "blocker_desc": task.blocker_desc or "n/a",
+                    "blocker_responsible": task.blocker_responsible or "n/a"
+                }
+                return jsonify({"success": True, "task": task_data})
+            else:
+                return jsonify({"success": False, "message": "Task not found."})
+
+    except Exception as e:
+        logger.error(f"Error fetching task: {traceback.format_exc()}")
+        return jsonify({"success": False, "message": "An error occurred while fetching the task."}), 500
+
+
+
 @app.route("/modify", methods=["GET", "POST"])
 @login_required
 def modify_task():
