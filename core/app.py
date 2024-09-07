@@ -509,7 +509,6 @@ def get_task(task_id):
         return jsonify({"success": False, "message": "An error occurred while fetching the task."}), 500
 
 
-
 @app.route("/modify", methods=["GET", "POST"])
 @login_required
 def modify_task():
@@ -517,12 +516,9 @@ def modify_task():
     Handle the modification of an existing task or display the modify task page with existing tasks.
     """
     if request.method == "POST":
-        logger.debug("Received POST request for modifying task.")
-
         # Get form data
         task_id = request.form.get("task_id")
         pos_id = request.form.get("pos_id")
-        logger.debug(f"Received Task ID: {task_id}, POS ID: {pos_id}")
 
         # Optional fields
         reconciliation_date = request.form.get("reconciliation_date") or None
@@ -540,71 +536,50 @@ def modify_task():
         try:
             if start_date:
                 start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                logger.debug(f"Parsed Start Date: {start_date}")
             if due_date:
                 due_date = datetime.strptime(due_date, '%Y-%m-%d').date()
-                logger.debug(f"Parsed Due Date: {due_date}")
             if reconciliation_date:
                 reconciliation_date = datetime.strptime(reconciliation_date, '%Y-%m-%d').date()
-                logger.debug(f"Parsed Reconciliation Date: {reconciliation_date}")
         except ValueError as e:
-            logger.error(f"Invalid date format: {e}")
             flash("Invalid date format. Please use YYYY-MM-DD.")
             return redirect("/modify")
 
         # Validate required fields
         if not task_id or not pos_id:
-            logger.error("Task ID or POS ID is missing.")
             flash("Task ID and POS ID are required.")
             return redirect("/modify")
 
         try:
             with engine.connect() as conn:
-                # Fetch current task data
-                task_query = select(tasks_table).where(tasks_table.c.task_id == task_id)
-                current_task = conn.execute(task_query).fetchone()
-
-                # Check if the task exists
-                if not current_task:
-                    logger.error(f"Task {task_id} not found.")
-                    flash(f"Task {task_id} not found.")
-                    return redirect("/modify")
-
-                # Prepare the update values, keeping current values if no new value is provided
-                update_values = {
-                    tasks_table.c.pos_id: pos_id,
-                    tasks_table.c.task_desc: description if description else current_task.task_desc,
-                    tasks_table.c.task_status: status if status else current_task.task_status,
-                    tasks_table.c.task_priority: priority if priority else current_task.task_priority,
-                    tasks_table.c.task_start_date: start_date if start_date else current_task.task_start_date,
-                    tasks_table.c.task_due_date: due_date if due_date else current_task.task_due_date,
-                    tasks_table.c.task_notes: notes if notes else current_task.task_notes
-                }
-
                 # Update the task in the tasks table
-                logger.debug(f"Updating task {task_id} with values: {update_values}")
-                conn.execute(
-                    tasks_table.update()
-                    .where(tasks_table.c.task_id == task_id)
-                    .values(update_values)
+                task_update = tasks_table.update().where(tasks_table.c.task_id == task_id).values(
+                    pos_id=pos_id,
+                    task_desc=description,
+                    task_status=status,
+                    task_priority=priority,
+                    task_start_date=start_date,
+                    task_due_date=due_date,
+                    task_notes=notes
                 )
+                conn.execute(task_update)
 
                 # Update the related blocker information if provided
                 if blocker_desc or blocker_responsible:
+                    # Check if blocker already exists for this task
                     blocker_exists = conn.execute(
                         select(blockers_table.c.blocker_id).where(blockers_table.c.task_id == task_id)
                     ).fetchone()
 
                     if blocker_exists:
-                        logger.debug(f"Updating existing blocker for task {task_id}.")
+                        # Update existing blocker
                         conn.execute(
                             blockers_table.update().where(blockers_table.c.task_id == task_id).values(
-                                blocker_desc=blocker_desc if blocker_desc else blocker_exists.blocker_desc,
-                                blocker_responsible=blocker_responsible if blocker_responsible else blocker_exists.blocker_responsible
+                                blocker_desc=blocker_desc,
+                                blocker_responsible=blocker_responsible
                             )
                         )
                     else:
-                        logger.debug(f"Inserting new blocker for task {task_id}.")
+                        # Insert new blocker if it doesn't exist
                         conn.execute(
                             blockers_table.insert().values(
                                 blocker_desc=blocker_desc,
@@ -616,20 +591,21 @@ def modify_task():
 
                 # Update reconciliation information if needed
                 if reconciliation_date or certified is not None:
+                    # Check if reconciliation already exists for this task
                     rec_exists = conn.execute(
                         select(rec_table.c.rec_id).where(rec_table.c.task_id == task_id)
                     ).fetchone()
 
                     if rec_exists:
-                        logger.debug(f"Updating existing reconciliation for task {task_id}.")
+                        # Update existing reconciliation
                         conn.execute(
                             rec_table.update().where(rec_table.c.task_id == task_id).values(
-                                rec_date=reconciliation_date if reconciliation_date else rec_exists.rec_date,
-                                rec_certified=(certified == 'true') if certified else rec_exists.rec_certified
+                                rec_date=reconciliation_date,
+                                rec_certified=(certified == 'true') if certified else None
                             )
                         )
                     else:
-                        logger.debug(f"Inserting new reconciliation for task {task_id}.")
+                        # Insert new reconciliation if it doesn't exist
                         conn.execute(
                             rec_table.insert().values(
                                 rec_date=reconciliation_date,
@@ -640,20 +616,18 @@ def modify_task():
                         )
 
                 conn.commit()
-                logger.debug(f"Task {task_id} modification committed successfully.")
-            flash("Task modified successfully!")
+            flash("Task modified successfully!")  # Only display success if everything works
+            return redirect("/modify")
+
         except Exception as e:
             logger.error(f"Error modifying task: {traceback.format_exc()}")
             flash("An error occurred while modifying the task.")
-        return redirect("/modify")
+            return redirect("/modify")
 
     else:
-        logger.debug("Handling GET request to display modify task page.")
-
         # Fetch POS data for the form dropdown
         with engine.connect() as conn:
             pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
-            logger.debug(f"Fetched POS data: {pos_data}")
 
             # Fetch tasks similarly to the `/tasks` route to display them on the modify page
             query = select(
@@ -678,7 +652,6 @@ def modify_task():
             ).order_by(desc(tasks_table.c.task_id))
 
             tasks = conn.execute(query).fetchall()
-            logger.debug(f"Fetched tasks: {tasks}")
 
             # Format tasks for rendering in template
             formatted_tasks = []
@@ -699,9 +672,8 @@ def modify_task():
                     "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
                 })
 
-        return render_template("modify.html", tasks=formatted_tasks, pos_data=pos_data)
-
-
+        # Render the modify.html with tasks and POS data
+        return render_template("modify.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
 
 
 
