@@ -10,14 +10,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const certifiedYesRadio = document.getElementById("certified_yes");
     const certifiedNoRadio = document.getElementById("certified_no");
 
+    // Debugging: Check if elements are loaded
+    console.log("DOM Loaded - Elements fetched: ", {
+        taskIdInput,
+        modifyBtn,
+        posNameSelect,
+        posIDSelect,
+        certifiedYesRadio,
+        certifiedNoRadio
+    });
+
     // Function to synchronize POS fields based on selection
     function syncPosFields(event) {
+        console.log("POS sync event triggered:", event.target.id);  // Debugging
         if (event.target === posNameSelect) {
             const selectedPosNameOption = posNameSelect.options[posNameSelect.selectedIndex];
             posIDSelect.value = selectedPosNameOption.getAttribute("data-pos-id");
+            console.log("POS Name changed. Selected POS ID:", posIDSelect.value);  // Debugging
         } else if (event.target === posIDSelect) {
             const selectedPosIDOption = posIDSelect.options[posIDSelect.selectedIndex];
             posNameSelect.value = selectedPosIDOption.getAttribute("data-pos-name");
+            console.log("POS ID changed. Selected POS Name:", posNameSelect.value);  // Debugging
         }
     }
 
@@ -27,6 +40,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Function to clear all form fields
     function clearFormFields() {
+        console.log("Clearing form fields.");  // Debugging
         posNameSelect.value = "";
         posIDSelect.value = "";
         document.getElementById("description").value = "";
@@ -50,14 +64,17 @@ document.addEventListener("DOMContentLoaded", function () {
     // Function to fetch task data
     function fetchTaskData(taskId) {
         if (taskId) {
+            console.log(`Fetching task data for Task ID: ${taskId}`);  // Debugging
             fetch(`/api/get_task/${taskId}`)
                 .then(response => {
+                    console.log("Server response:", response);  // Debugging
                     if (!response.ok) {
                         throw new Error("Network response was not ok");
                     }
                     return response.json();
                 })
                 .then(data => {
+                    console.log("Data received:", data);  // Debugging
                     if (data.success) {
                         // Populate the form fields with the fetched task data
                         posNameSelect.value = data.task.pos_name;
@@ -66,10 +83,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
                         // Ensure the status and priority radio buttons are properly selected
                         const statusRadio = document.querySelector(`input[name="status"][value="${data.task.task_status}"]`);
-                        if (statusRadio) statusRadio.checked = true;
+                        if (statusRadio) {
+                            statusRadio.checked = true;
+                            console.log(`Status set to: ${data.task.task_status}`);  // Debugging
+                        }
 
                         const priorityRadio = document.querySelector(`input[name="priority"][value="${data.task.task_priority}"]`);
-                        if (priorityRadio) priorityRadio.checked = true;
+                        if (priorityRadio) {
+                            priorityRadio.checked = true;
+                            console.log(`Priority set to: ${data.task.task_priority}`);  // Debugging
+                        }
 
                         document.getElementById("start_date").value = data.task.task_start_date;
                         document.getElementById("due_date").value = data.task.task_due_date;
@@ -89,16 +112,18 @@ document.addEventListener("DOMContentLoaded", function () {
                             certifiedYesRadio.checked = false;
                             certifiedNoRadio.checked = false;
                         }
+                        console.log("Form populated with task data.");  // Debugging
                     } else {
                         alert(data.message || "Task not found!");
-                        console.error("API Error:", data);
+                        console.error("API Error:", data);  // Debugging
                     }
                 })
                 .catch(error => {
-                    console.error('Error fetching task:', error);
+                    console.error('Error fetching task:', error);  // Debugging
                     alert('Error fetching task. Please check the console for more details.');
                 });
         } else {
+            console.log("No task ID provided. Clearing form.");  // Debugging
             // Clear all fields if taskId is empty
             clearFormFields();
         }
@@ -107,9 +132,14 @@ document.addEventListener("DOMContentLoaded", function () {
     // Listen for changes in the task ID input field
     taskIdInput.addEventListener("input", function () {
         const taskId = taskIdInput.value.trim();
+        console.log("Task ID input changed:", taskId);  // Debugging
         
         // Trigger fetch only if the input is not empty
-        fetchTaskData(taskId);
+        if (taskId) {
+            fetchTaskData(taskId);
+        } else {
+            clearFormFields();
+        }
     });
 
     // Function to modify task data
@@ -117,14 +147,16 @@ document.addEventListener("DOMContentLoaded", function () {
         const taskId = taskIdInput.value.trim();
         if (!taskId) {
             alert("Task ID is required to modify a task.");
+            console.error("Task ID is missing.");  // Debugging
             return;
         }
 
         const formData = new FormData(document.getElementById("modifyTaskForm"));
         const formObject = {};
         formData.forEach((value, key) => formObject[key] = value);
+        console.log("Form data being sent for modification:", formObject);  // Debugging
 
-        fetch(`/api/modify_task/${taskId}`, {
+        fetch(`/modify`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -132,28 +164,31 @@ document.addEventListener("DOMContentLoaded", function () {
             body: JSON.stringify(formObject)
         })
         .then(response => {
+            console.log("Response from server:", response);  // Debugging
             if (!response.ok) {
                 throw new Error("Network response was not ok");
             }
             return response.json();
         })
         .then(data => {
+            console.log("Data received from server:", data);  // Debugging
             if (data.success) {
                 alert("Task modified successfully!");
-                // Refresh the tasks table
-                window.location.reload(); // or fetch and re-render tasks dynamically
+                window.location.reload();  // Refresh the tasks table or fetch and re-render tasks dynamically
             } else {
                 alert(data.message || "Failed to modify task.");
+                console.error("Task modification failed:", data);  // Debugging
             }
         })
         .catch(error => {
-            console.error('Error modifying task:', error);
+            console.error('Error modifying task:', error);  // Debugging
             alert('Error modifying task. Please check the console for more details.');
         });
     }
 
     // Listen for clicks on the "Modify" button
     modifyBtn.addEventListener("click", function () {
+        console.log("Modify button clicked.");  // Debugging
         modifyTaskData();
     });
 });
