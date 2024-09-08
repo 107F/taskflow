@@ -13,11 +13,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const inProgressColumn = document.getElementById("inprogress");
     const doneColumn = document.getElementById("done");
 
-    /**
-     * getTodayDate
-     * 
-     * Returns today's date in 'YYYY-MM-DD' format.
-     */
+    // Variable to prevent infinite loops when auto-updating POS fields
+    let isPosIDUpdating = false;
+    let isPosNameUpdating = false;
+
+    // Get today's date for setting placeholders
     function getTodayDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -43,6 +43,102 @@ document.addEventListener("DOMContentLoaded", function () {
             .map(checkbox => checkbox.value);
     }
 
+    // Fetch all POS Names and POS IDs for reset
+    function fetchAllPosNamesAndIds() {
+        fetch('/api/pos_names_and_ids')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset POS Name dropdown
+                    posNameSelect.innerHTML = '<option value="">All</option>';
+                    data.pos_names.forEach(posName => {
+                        const option = document.createElement("option");
+                        option.value = posName;
+                        option.textContent = posName;
+                        posNameSelect.appendChild(option);
+                    });
+
+                    // Reset POS ID dropdown
+                    posIDSelect.innerHTML = '<option value="">All</option>';
+                    data.pos_ids.forEach(posId => {
+                        const option = document.createElement("option");
+                        option.value = posId;
+                        option.textContent = posId;
+                        posIDSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error("Error fetching POS Names and IDs:", error));
+    }
+
+    // Fetch POS Names based on selected POS ID
+    function fetchPosNames(posId) {
+        if (!isPosIDUpdating) {
+            isPosIDUpdating = true;
+            fetch(`/api/pos_names?pos_id=${posId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        posNameSelect.innerHTML = '<option value="">All</option>'; // Reset options
+                        data.pos_names.forEach(posName => {
+                            const option = document.createElement("option");
+                            option.value = posName;
+                            option.textContent = posName;
+                            posNameSelect.appendChild(option);
+                        });
+                        if (data.pos_names.length === 1) {
+                            // If there's only one matching name, select it automatically
+                            posNameSelect.value = data.pos_names[0];
+                        }
+                    }
+                })
+                .catch(error => console.error("Error fetching POS Names:", error))
+                .finally(() => isPosIDUpdating = false);
+        }
+    }
+
+    // Fetch POS IDs based on selected POS Name
+    function fetchPosNumbers(posName) {
+        if (!isPosNameUpdating) {
+            isPosNameUpdating = true;
+            fetch(`/api/pos_ids?pos_name=${posName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        posIDSelect.innerHTML = '<option value="">All</option>'; // Reset options
+                        data.pos_ids.forEach(posId => {
+                            const option = document.createElement("option");
+                            option.value = posId;
+                            option.textContent = posId;
+                            posIDSelect.appendChild(option);
+                        });
+                        if (data.pos_ids.length === 1) {
+                            // If there's only one matching ID, select it automatically
+                            posIDSelect.value = data.pos_ids[0];
+                        }
+                    }
+                })
+                .catch(error => console.error("Error fetching POS IDs:", error))
+                .finally(() => isPosNameUpdating = false);
+        }
+    }
+
+    // Event listener for POS ID selection change
+    posIDSelect.addEventListener("change", function () {
+        const selectedPosId = posIDSelect.value;
+        if (selectedPosId) {
+            fetchPosNames(selectedPosId);  // Fetch POS Names based on POS ID
+        }
+    });
+
+    // Event listener for POS Name selection change
+    posNameSelect.addEventListener("change", function () {
+        const selectedPosName = posNameSelect.value;
+        if (selectedPosName) {
+            fetchPosNumbers(selectedPosName);  // Fetch POS Numbers based on POS Name
+        }
+    });
+
     // Fetch and display tasks on the Kanban board
     function fetchAndDisplayKanbanTasks(data) {
         console.log("Sending data to server for Kanban:", data);
@@ -64,12 +160,12 @@ document.addEventListener("DOMContentLoaded", function () {
             inProgressColumn.innerHTML = "";
             doneColumn.innerHTML = "";
 
-            // Check if any tasks were returned
+            // Render tasks in the appropriate columns
             if (data.tasks && data.tasks.length > 0) {
                 data.tasks.forEach(task => {
                     const taskCard = document.createElement("div");
                     taskCard.className = "card task-card mb-3";
-                    taskCard.setAttribute("data-task-id", task.task_id);  // For tracking
+                    taskCard.setAttribute("data-task-id", task.task_id);
                     taskCard.innerHTML = `
                         <div class="card-body">
                             <h5 class="card-title">${task.task_desc || 'No Description'}</h5>
@@ -79,7 +175,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                     `;
 
-                    // Place tasks into the correct column based on status
                     if (task.task_status === "Backlog") {
                         backlogColumn.appendChild(taskCard);
                     } else if (task.task_status === "To Do") {
@@ -90,96 +185,16 @@ document.addEventListener("DOMContentLoaded", function () {
                         doneColumn.appendChild(taskCard);
                     }
                 });
-                console.log("Kanban tasks rendered as cards successfully.");
-                initializeDragAndDrop();  // Initialize drag-and-drop after rendering tasks
+                console.log("Kanban tasks rendered successfully.");
             } else {
                 backlogColumn.innerHTML = "<p>No Backlog tasks found.</p>";
                 todoColumn.innerHTML = "<p>No To Do tasks found.</p>";
                 inProgressColumn.innerHTML = "<p>No In Progress tasks found.</p>";
                 doneColumn.innerHTML = "<p>No Done tasks found.</p>";
-                console.log("No Kanban tasks found.");
             }
         })
         .catch(error => console.error("Error fetching Kanban tasks:", error));
     }
-
-    // Initialize drag-and-drop functionality
-    function initializeDragAndDrop() {
-        const columns = [backlogColumn, todoColumn, inProgressColumn, doneColumn];
-
-        columns.forEach(column => {
-            new Sortable(column, {
-                group: "kanban",
-                animation: 150,
-                onEnd: function (evt) {
-                    const taskId = evt.item.getAttribute("data-task-id");
-                    const newStatus = evt.to.id;  // The column id (backlog, todo, etc.) becomes the new status
-
-                    // Translate the column id to a task status
-                    let statusMap = {
-                        backlog: "Backlog",
-                        todo: "To Do",
-                        inprogress: "In Progress",
-                        done: "Done"
-                    };
-
-                    const updatedStatus = statusMap[newStatus];
-                    console.log(`Task ${taskId} moved to ${updatedStatus}`);
-
-                    // Update task status via API
-                    updateTaskStatus(taskId, updatedStatus);
-                }
-            });
-        });
-    }
-
-    // Update task status on the server when dragged to a new column
-    function updateTaskStatus(taskId, newStatus) {
-        fetch(`/api/update_task_status/${taskId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: newStatus })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log(`Task ${taskId} status updated successfully to ${newStatus}`);
-            } else {
-                console.error(`Error updating status for task ${taskId}`);
-            }
-        })
-        .catch(error => console.error(`Error updating task status for task ${taskId}:`, error));
-    }
-
-    // Fetch POS Names based on selected POS ID
-    function fetchPosNames(posId) {
-        fetch(`/api/pos_names?pos_id=${posId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    posNameSelect.innerHTML = '<option value="">All</option>'; // Reset options
-                    data.pos_names.forEach(posName => {
-                        const option = document.createElement("option");
-                        option.value = posName;
-                        option.textContent = posName;
-                        posNameSelect.appendChild(option);
-                    });
-                }
-            })
-            .catch(error => console.error("Error fetching POS Names:", error));
-    }
-
-    // Event listener for POS ID selection change
-    posIDSelect.addEventListener("change", function () {
-        const selectedPosId = posIDSelect.value;
-        if (selectedPosId) {
-            fetchPosNames(selectedPosId);  // Fetch POS Names based on POS ID
-        } else {
-            posNameSelect.innerHTML = '<option value="">All</option>'; // Reset POS Name if no POS ID is selected
-        }
-    });
 
     // Event listener for the Filter button
     filterBtn.addEventListener("click", function () {
@@ -201,29 +216,60 @@ document.addEventListener("DOMContentLoaded", function () {
             search_query: searchQuery
         };
 
-        console.log("Filter button clicked with criteria:", data);
+        fetchAndDisplayKanbanTasks(data);
+    });
+
+    // Event listener for the search input field (dynamic filtering)
+    taskSearchInput.addEventListener("input", function () {
+        const query = taskSearchInput.value;
+        const posID = posIDSelect.value;
+        const posName = posNameSelect.value;
+        const startDate = startDateInput.value !== todayDate ? startDateInput.value : null;
+        const endDate = endDateInput.value !== todayDate ? endDateInput.value : null;
+        const selectedStatuses = getSelectedCheckboxValues("input[id^='status']");
+        const selectedPriorities = getSelectedCheckboxValues("input[id^='priority']");
+
+        const data = {
+            search_query: query,
+            pos_id: posID,
+            pos_name: posName,
+            start_date: startDate,
+            end_date: endDate,
+            statuses: selectedStatuses,
+            priorities: selectedPriorities
+        };
+
         fetchAndDisplayKanbanTasks(data);
     });
 
     // Event listener for the Clear Filter button
     clearFilterBtn.addEventListener("click", function () {
+        console.log("Clear filter button clicked");
+
+        // Reset filters
         posIDSelect.value = "";
         posNameSelect.value = "";
-        setDateInputPlaceholders();
         taskSearchInput.value = "";
+        setDateInputPlaceholders();
 
+        // Uncheck all status and priority checkboxes
         document.querySelectorAll("input[id^='status'], input[id^='priority']").forEach(checkbox => {
             checkbox.checked = false;
         });
 
-        fetchAndDisplayKanbanTasks({});
-    });
+        // Re-fetch all POS names and IDs after clearing the filters
+        fetchAllPosNamesAndIds();
 
-    // Event listener for search input field
-    taskSearchInput.addEventListener("input", function () {
-        const query = taskSearchInput.value;
-        console.log("Search input changed:", query); // Debugging: Log search input changes
-        fetchAndDisplayKanbanTasks({ search_query: query });
+        // Fetch tasks without any filters
+        fetchAndDisplayKanbanTasks({
+            search_query: "",
+            pos_id: "",
+            pos_name: "",
+            start_date: null,
+            end_date: null,
+            statuses: [],
+            priorities: []
+        });
     });
 
     // Initial fetch when the page loads

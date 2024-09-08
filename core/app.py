@@ -675,37 +675,25 @@ def modify_task():
         # Render the modify.html with tasks and POS data
         return render_template("modify.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
 
+
 @app.route("/kanban")
 @login_required
 def kanban():
-    """
-    Render the Kanban board page with POS data for filters.
-    """
+    """Render the Kanban board page with POS data for filters."""
     try:
-        logger.debug("Rendering Kanban board template.")
-
-        # Fetch POS data for the filter dropdowns
         with engine.connect() as conn:
             pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
 
-        # Render the kanban.html template and pass POS data
-        return render_template("kanban.html", pos_data=pos_data, date=date)
+        return render_template("kanban.html", pos_data=pos_data, date=datetime.today())
     except Exception as e:
-        logger.error(f"Error rendering Kanban board: {e}")
-        return apology("Error loading Kanban board", 500)
-
+        return jsonify({"error": "Error loading Kanban board"}), 500
 
 
 @app.route("/api/kanban_tasks", methods=["POST"])
 @login_required
 def get_kanban_tasks():
-    """
-    Fetch all tasks and return them as JSON for the Kanban board, based on filters.
-    """
+    """Fetch all tasks for the Kanban board, with filters."""
     try:
-        logger.debug("Fetching tasks for Kanban board with filters.")
-
-        # Get the filter data from the POST request
         data = request.get_json()
         search_query = data.get("search_query", "").strip()
         pos_id = data.get("pos_id")
@@ -715,11 +703,7 @@ def get_kanban_tasks():
         statuses = data.get("statuses", [])
         priorities = data.get("priorities", [])
 
-        logger.debug(f"Filters received: {data}")
-
-        # Start building the query to fetch tasks
         with engine.connect() as conn:
-            # JOIN the pos_table to fetch POS-related data
             query = select(
                 tasks_table.c.task_id,
                 tasks_table.c.task_desc,
@@ -727,119 +711,113 @@ def get_kanban_tasks():
                 tasks_table.c.task_priority,
                 tasks_table.c.task_due_date,
                 pos_table.c.pos_id,
-                pos_table.c.pos_name  # Ensure pos_name is included
+                pos_table.c.pos_name
             ).select_from(
                 tasks_table.join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
             )
 
-            # Add filter conditions to the query based on the provided filters
             conditions = []
-
-            # Handle search query
             if search_query:
-                conditions.append(or_(
-                    func.lower(tasks_table.c.task_desc).like(f"%{search_query.lower()}%")
-                ))
-
-            # Handle POS ID filter
+                conditions.append(tasks_table.c.task_desc.ilike(f"%{search_query}%"))
             if pos_id:
                 conditions.append(pos_table.c.pos_id == pos_id)
-
-            # Handle POS Name filter
             if pos_name:
                 conditions.append(pos_table.c.pos_name.ilike(f"%{pos_name}%"))
-
-            # Handle date filters
             if start_date:
-                try:
-                    start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                    conditions.append(tasks_table.c.task_due_date >= start_date)
-                except ValueError:
-                    logger.error(f"Invalid start date: {start_date}")
-
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+                conditions.append(tasks_table.c.task_due_date >= start_date)
             if end_date:
-                try:
-                    end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-                    conditions.append(tasks_table.c.task_due_date <= end_date)
-                except ValueError:
-                    logger.error(f"Invalid end date: {end_date}")
-
-            # Handle status filter
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                conditions.append(tasks_table.c.task_due_date <= end_date)
             if statuses:
                 conditions.append(tasks_table.c.task_status.in_(statuses))
-
-            # Handle priority filter
             if priorities:
                 conditions.append(tasks_table.c.task_priority.in_(priorities))
 
-            # Apply the conditions to the query
             if conditions:
                 query = query.where(and_(*conditions))
 
-            # Execute the query and fetch the tasks
             tasks = conn.execute(query).fetchall()
 
-            logger.debug(f"Tasks fetched: {tasks}")
-
-            # Format the tasks into JSON-compatible structure
-            tasks_list = [
-                {
-                    "task_id": task.task_id,
-                    "task_desc": task.task_desc,
-                    "task_status": task.task_status,
-                    "task_priority": task.task_priority,
-                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if task.task_due_date else "n/a",
-                    "pos_id": task.pos_id,  # Add POS ID and POS Name to Kanban tasks
-                    "pos_name": task.pos_name
-                } for task in tasks
-            ]
-
-            logger.debug(f"Formatted tasks for JSON response: {tasks_list}")
-
-            return jsonify({"tasks": tasks_list})
+        tasks_list = [
+            {
+                "task_id": task.task_id,
+                "task_desc": task.task_desc,
+                "task_status": task.task_status,
+                "task_priority": task.task_priority,
+                "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if task.task_due_date else "n/a",
+                "pos_id": task.pos_id,
+                "pos_name": task.pos_name
+            } for task in tasks
+        ]
+        return jsonify({"tasks": tasks_list})
 
     except Exception as e:
-        logger.error(f"Error fetching Kanban tasks: {e}")
         return jsonify({"error": "Failed to fetch tasks."}), 500
-
-
 
 
 @app.route("/api/update_task_status/<int:task_id>", methods=["POST"])
 @login_required
 def update_task_status(task_id):
-    """
-    Update the status of a task via the Kanban board drag-and-drop.
-    """
+    """Update the status of a task via the Kanban board drag-and-drop."""
     try:
-        logger.debug(f"Request to update task status for task_id: {task_id}")
-
-        # Get the new status from the request body
         data = request.get_json()
-        logger.debug(f"Received data: {data}")
-
         new_status = data.get("status")
         if not new_status:
-            logger.error(f"Status not provided for task_id {task_id}.")
             return jsonify({"success": False, "message": "No status provided."}), 400
 
-        logger.debug(f"New status for task {task_id}: {new_status}")
-
-        # Update the task's status in the database
         with engine.connect() as conn:
             update_query = tasks_table.update().where(tasks_table.c.task_id == task_id).values(task_status=new_status)
-            logger.debug(f"SQL Update Query: {str(update_query)}")
-
             conn.execute(update_query)
             conn.commit()
 
-        logger.debug(f"Task {task_id} status updated successfully.")
         return jsonify({"success": True})
 
     except Exception as e:
-        logger.error(f"Error updating task {task_id} status: {e}")
         return jsonify({"success": False, "message": "Failed to update task status."}), 500
 
+
+@app.route("/api/pos_names", methods=["GET"])
+@login_required
+def get_pos_names():
+    """Fetch POS names based on selected POS ID."""
+    pos_id = request.args.get("pos_id")
+    if pos_id:
+        with engine.connect() as conn:
+            pos_names = conn.execute(select(pos_table.c.pos_name).where(pos_table.c.pos_id == pos_id)).fetchall()
+        pos_names_list = [pos_name[0] for pos_name in pos_names]
+        return jsonify(success=True, pos_names=pos_names_list)
+    return jsonify(success=False)
+
+
+@app.route("/api/pos_ids", methods=["GET"])
+@login_required
+def get_pos_ids():
+    """Fetch POS IDs based on selected POS Name."""
+    pos_name = request.args.get("pos_name")
+    if pos_name:
+        with engine.connect() as conn:
+            pos_ids = conn.execute(select(pos_table.c.pos_id).where(pos_table.c.pos_name == pos_name)).fetchall()
+        pos_ids_list = [pos_id[0] for pos_id in pos_ids]
+        return jsonify(success=True, pos_ids=pos_ids_list)
+    return jsonify(success=False)
+
+@app.route("/api/pos_names_and_ids", methods=["GET"])
+@login_required
+def get_all_pos_names_and_ids():
+    """Fetch all POS Names and POS IDs for filter reset."""
+    try:
+        with engine.connect() as conn:
+            pos_names = conn.execute(select(pos_table.c.pos_name).distinct()).fetchall()
+            pos_ids = conn.execute(select(pos_table.c.pos_id).distinct()).fetchall()
+
+        pos_names_list = [pos_name[0] for pos_name in pos_names]
+        pos_ids_list = [pos_id[0] for pos_id in pos_ids]
+
+        return jsonify(success=True, pos_names=pos_names_list, pos_ids=pos_ids_list)
+
+    except Exception as e:
+        return jsonify(success=False, message="Failed to fetch POS Names and IDs."), 500
 
 
 def errorhandler(e):
