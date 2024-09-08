@@ -9,49 +9,28 @@ document.addEventListener("DOMContentLoaded", function () {
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
 
-    /**
-     * getTodayDate
-     * 
-     * Returns today's date in 'YYYY-MM-DD' format. This function is used to set and check default date
-     * values for date input fields.
-     * 
-     * @returns {string} Today's date formatted as 'YYYY-MM-DD'.
-     */
+    let isPosIDUpdating = false;
+    let isPosNameUpdating = false;
+
+    // Get today's date for setting placeholders
     function getTodayDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are zero-based in JavaScript
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
         const dd = String(today.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    // Initialize placeholders with today's date
     const todayDate = getTodayDate();
-
-    /**
-     * setDateInputPlaceholders
-     * 
-     * Resets the placeholders and values of the start and end date input fields to today's date.
-     */
-    function setDateInputPlaceholders() {
-        startDateInput.value = todayDate; // Reset value to today's date
-        endDateInput.value = todayDate;   // Reset value to today's date
-        startDateInput.placeholder = todayDate; // Also set the placeholder
-        endDateInput.placeholder = todayDate;   // Also set the placeholder
-    }
-
-    // Call the function to initialize the date placeholders and values on page load
     setDateInputPlaceholders();
 
-    /**
-     * getSelectedCheckboxValues
-     * 
-     * Collects the values of all checkboxes that are checked under the specified selector.
-     * This is used to gather the selected statuses and priorities for filtering tasks.
-     * 
-     * @param {string} selector - CSS selector to identify the checkboxes to collect values from.
-     * @returns {Array} Array of selected checkbox values.
-     */
+    function setDateInputPlaceholders() {
+        startDateInput.value = todayDate;
+        endDateInput.value = todayDate;
+        startDateInput.placeholder = todayDate;
+        endDateInput.placeholder = todayDate;
+    }
+
     function getSelectedCheckboxValues(selector) {
         const checkboxes = document.querySelectorAll(selector);
         return Array.from(checkboxes)
@@ -59,16 +38,105 @@ document.addEventListener("DOMContentLoaded", function () {
             .map(checkbox => checkbox.value);
     }
 
-    /**
-     * fetchAndDisplayTasks
-     * 
-     * Sends an AJAX request to the server to fetch tasks based on the provided filter criteria.
-     * The server response is used to dynamically update the task display table.
-     * 
-     * @param {Object} data - Filter criteria including search query, POS ID, POS Name, date range, statuses, and priorities.
-     */
+    // Fetch all POS Names and POS IDs for reset
+    function fetchAllPosNamesAndIds() {
+        fetch('/api/pos_names_and_ids')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reset POS Name dropdown
+                    posNameSelect.innerHTML = '<option value="">All</option>';
+                    data.pos_names.forEach(posName => {
+                        const option = document.createElement("option");
+                        option.value = posName;
+                        option.textContent = posName;
+                        posNameSelect.appendChild(option);
+                    });
+
+                    // Reset POS ID dropdown
+                    posIDSelect.innerHTML = '<option value="">All</option>';
+                    data.pos_ids.forEach(posId => {
+                        const option = document.createElement("option");
+                        option.value = posId;
+                        option.textContent = posId;
+                        posIDSelect.appendChild(option);
+                    });
+                }
+            })
+            .catch(error => console.error("Error fetching POS Names and IDs:", error));
+    }
+
+    // Fetch POS Names based on selected POS ID
+    function fetchPosNames(posId) {
+        if (!isPosIDUpdating) {
+            isPosIDUpdating = true;
+            fetch(`/api/pos_names?pos_id=${posId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        posNameSelect.innerHTML = '<option value="">All</option>'; // Reset options
+                        data.pos_names.forEach(posName => {
+                            const option = document.createElement("option");
+                            option.value = posName;
+                            option.textContent = posName;
+                            posNameSelect.appendChild(option);
+                        });
+                        if (data.pos_names.length === 1) {
+                            // If there's only one matching name, select it automatically
+                            posNameSelect.value = data.pos_names[0];
+                        }
+                    }
+                })
+                .catch(error => console.error("Error fetching POS Names:", error))
+                .finally(() => isPosIDUpdating = false);
+        }
+    }
+
+    // Fetch POS IDs based on selected POS Name
+    function fetchPosNumbers(posName) {
+        if (!isPosNameUpdating) {
+            isPosNameUpdating = true;
+            fetch(`/api/pos_ids?pos_name=${posName}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        posIDSelect.innerHTML = '<option value="">All</option>'; // Reset options
+                        data.pos_ids.forEach(posId => {
+                            const option = document.createElement("option");
+                            option.value = posId;
+                            option.textContent = posId;
+                            posIDSelect.appendChild(option);
+                        });
+                        if (data.pos_ids.length === 1) {
+                            // If there's only one matching ID, select it automatically
+                            posIDSelect.value = data.pos_ids[0];
+                        }
+                    }
+                })
+                .catch(error => console.error("Error fetching POS IDs:", error))
+                .finally(() => isPosNameUpdating = false);
+        }
+    }
+
+    // Event listener for POS ID selection change
+    posIDSelect.addEventListener("change", function () {
+        const selectedPosId = posIDSelect.value;
+        if (selectedPosId) {
+            fetchPosNames(selectedPosId);  // Fetch POS Names based on POS ID
+        }
+    });
+
+    // Event listener for POS Name selection change
+    posNameSelect.addEventListener("change", function () {
+        const selectedPosName = posNameSelect.value;
+        if (selectedPosName) {
+            fetchPosNumbers(selectedPosName);  // Fetch POS Numbers based on POS Name
+        }
+    });
+
+    // Fetch and display tasks based on filter
     function fetchAndDisplayTasks(data) {
-        console.log("Sending data to server:", data); // Debugging: Log data sent to server
+        console.log("Sending data to server:", data);
 
         fetch("/filter_tasks", {
             method: 'POST',
@@ -79,11 +147,11 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Received data:", data); // Debugging: Log the received JSON
+            console.log("Received data:", data);
+
             taskTableBody.innerHTML = ""; // Clear the table body
 
             if (data.tasks && data.tasks.length > 0) {
-                // If tasks are returned, render them in the table
                 data.tasks.forEach(task => {
                     const row = `
                     <tr>
@@ -103,48 +171,24 @@ document.addEventListener("DOMContentLoaded", function () {
                     </tr>`;
                     taskTableBody.innerHTML += row;
                 });
-                console.log("Tasks rendered successfully."); // Debugging: Log successful rendering
+                console.log("Tasks rendered successfully.");
             } else {
-                // If no tasks are returned, display a message indicating that
-                console.log("No tasks found"); // Debugging: Log when no tasks are found
                 taskTableBody.innerHTML = "<tr><td colspan='13'>No tasks found</td></tr>";
             }
         })
         .catch(error => console.error("Error fetching tasks:", error));
     }
 
-    /**
-     * Event listener for search input field
-     * 
-     * Fetches and displays tasks whenever the user types in the search bar.
-     * The search query is used as a filter to dynamically update the task list.
-     */
-    taskSearchInput.addEventListener("input", function () {
-        const query = taskSearchInput.value;
-        console.log("Search input changed:", query); // Debugging: Log search input changes
-
-        // Fetch tasks based on the search input
-        fetchAndDisplayTasks({ search_query: query });
-    });
-
-    /**
-     * Event listener for the Filter button
-     * 
-     * Gathers all filter criteria from the UI elements and triggers a fetch request to update the task list.
-     * Treats today's date as a placeholder and only applies date filters if changed from the default value.
-     */
+    // Event listener for the Filter button
     filterBtn.addEventListener("click", function () {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
         const searchQuery = taskSearchInput.value;
-        const startDate = startDateInput.value !== todayDate ? startDateInput.value : null; // Only filter if date is changed
-        const endDate = endDateInput.value !== todayDate ? endDateInput.value : null; // Only filter if date is changed
-
-        // Get selected statuses and priorities
+        const startDate = startDateInput.value !== todayDate ? startDateInput.value : null;
+        const endDate = endDateInput.value !== todayDate ? endDateInput.value : null;
         const selectedStatuses = getSelectedCheckboxValues("input[id^='status']");
         const selectedPriorities = getSelectedCheckboxValues("input[id^='priority']");
 
-        // Prepare data object for filtering
         const data = {
             pos_id: posID,
             pos_name: posName,
@@ -155,50 +199,50 @@ document.addEventListener("DOMContentLoaded", function () {
             priorities: selectedPriorities
         };
 
-        console.log("Filter button clicked with criteria - POS ID:", posID, "POS Name:", posName,
-            "Search Query:", searchQuery, "Start Date:", startDate, "End Date:", endDate,
-            "Selected Statuses:", selectedStatuses, "Selected Priorities:", selectedPriorities); // Debugging: Log filter criteria
-
-        // Fetch tasks based on the collected filter criteria
         fetchAndDisplayTasks(data);
     });
 
-    /**
-     * Event listener for the Clear Filter button
-     * 
-     * Resets all filter inputs to their default values and fetches the full task list.
-     * Ensures no filters are applied after clearing.
-     */
-    clearFilterBtn.addEventListener("click", function () {
-        console.log("Clear filter button clicked"); // Debugging: Log when clear filter button is clicked
+    // Event listener for the search input field (dynamic filtering)
+    taskSearchInput.addEventListener("input", function () {
+        const query = taskSearchInput.value;
+        const posID = posIDSelect.value;
+        const posName = posNameSelect.value;
+        const startDate = startDateInput.value !== todayDate ? startDateInput.value : null;
+        const endDate = endDateInput.value !== todayDate ? endDateInput.value : null;
+        const selectedStatuses = getSelectedCheckboxValues("input[id^='status']");
+        const selectedPriorities = getSelectedCheckboxValues("input[id^='priority']");
 
-        // Reset all filter inputs to default values
+        const data = {
+            search_query: query,
+            pos_id: posID,
+            pos_name: posName,
+            start_date: startDate,
+            end_date: endDate,
+            statuses: selectedStatuses,
+            priorities: selectedPriorities
+        };
+
+        fetchAndDisplayTasks(data);
+    });
+
+    // Event listener for the Clear Filter button
+    clearFilterBtn.addEventListener("click", function () {
         posIDSelect.value = "";
         posNameSelect.value = "";
         taskSearchInput.value = "";
-
-        // Reset placeholders and values for date inputs
         setDateInputPlaceholders();
 
-        // Uncheck all status and priority checkboxes
         document.querySelectorAll("input[id^='status'], input[id^='priority']").forEach(checkbox => {
             checkbox.checked = false;
         });
 
-        console.log("Filters reset to default values"); // Debugging: Log reset filter criteria
+        // Reset POS names and IDs
+        fetchAllPosNamesAndIds();
 
         // Fetch tasks without any filters
-        fetchAndDisplayTasks({
-            search_query: "",
-            pos_id: "",
-            pos_name: "",
-            start_date: null, // No date filter
-            end_date: null,   // No date filter
-            statuses: [],
-            priorities: []
-        });
+        fetchAndDisplayTasks({});
     });
 
-    console.log("Page loaded - Start Date placeholder set to:", startDateInput.placeholder,
-        "End Date placeholder set to:", endDateInput.placeholder); // Debugging: Log initial placeholder values
+    // Initial fetch when the page loads
+    fetchAndDisplayTasks({});
 });
