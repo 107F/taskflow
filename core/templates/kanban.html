@@ -1,3 +1,4 @@
+<!-- kanban.html -->
 {% extends "layout.html" %}
 
 {% block title %}
@@ -5,26 +6,17 @@
 {% endblock %}
 
 {% block main %}
-    <h1>Kanban Board</h1>
-    <input id="kanbanSearch" placeholder="Search tasks..." type="text">
-    <button id="filterBtn">Filter</button>
-    <div class="kanban-board">
-        <div class="kanban-column" id="backlog">
-            <h2>Backlog</h2>
-            <!-- Tasks will be loaded here via AJAX -->
+<div class="container-fluid">
+    <div class="row">
+        <!-- Sidebar Section -->
+        <div class="col-md-3">
+            {% include '_sidebar.html' %}
         </div>
-        <div class="kanban-column" id="todo">
-            <h2>To Do</h2>
-            <!-- Tasks will be loaded here via AJAX -->
-        </div>
-        <div class="kanban-column" id="inprogress">
-            <h2>In Progress</h2>
-            <!-- Tasks will be loaded here via AJAX -->
-        </div>
-        <div class="kanban-column" id="done">
-            <h2>Done</h2>
-            <!-- Tasks will be loaded here via AJAX -->
+
+        <!-- Kanban Board Section -->
+        <div class="col-md-9">
+            {% include '_kanban_board.html' %}
         </div>
     </div>
-    <script src="/static/js/kanban.js"></script>
+</div>
 {% endblock %}
