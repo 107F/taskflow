@@ -13,11 +13,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const inProgressColumn = document.getElementById("inprogress");
     const doneColumn = document.getElementById("done");
 
-    // Variable to prevent infinite loops when auto-updating POS fields
     let isPosIDUpdating = false;
     let isPosNameUpdating = false;
 
-    // Get today's date for setting placeholders
     function getTodayDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -43,13 +41,11 @@ document.addEventListener("DOMContentLoaded", function () {
             .map(checkbox => checkbox.value);
     }
 
-    // Fetch all POS Names and POS IDs for reset
     function fetchAllPosNamesAndIds() {
         fetch('/api/pos_names_and_ids')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Reset POS Name dropdown
                     posNameSelect.innerHTML = '<option value="">All</option>';
                     data.pos_names.forEach(posName => {
                         const option = document.createElement("option");
@@ -58,7 +54,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         posNameSelect.appendChild(option);
                     });
 
-                    // Reset POS ID dropdown
                     posIDSelect.innerHTML = '<option value="">All</option>';
                     data.pos_ids.forEach(posId => {
                         const option = document.createElement("option");
@@ -71,7 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error fetching POS Names and IDs:", error));
     }
 
-    // Fetch POS Names based on selected POS ID
     function fetchPosNames(posId) {
         if (!isPosIDUpdating) {
             isPosIDUpdating = true;
@@ -79,7 +73,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        posNameSelect.innerHTML = '<option value="">All</option>'; // Reset options
+                        posNameSelect.innerHTML = '<option value="">All</option>';
                         data.pos_names.forEach(posName => {
                             const option = document.createElement("option");
                             option.value = posName;
@@ -87,7 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             posNameSelect.appendChild(option);
                         });
                         if (data.pos_names.length === 1) {
-                            // If there's only one matching name, select it automatically
                             posNameSelect.value = data.pos_names[0];
                         }
                     }
@@ -97,7 +90,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Fetch POS IDs based on selected POS Name
     function fetchPosNumbers(posName) {
         if (!isPosNameUpdating) {
             isPosNameUpdating = true;
@@ -105,7 +97,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        posIDSelect.innerHTML = '<option value="">All</option>'; // Reset options
+                        posIDSelect.innerHTML = '<option value="">All</option>';
                         data.pos_ids.forEach(posId => {
                             const option = document.createElement("option");
                             option.value = posId;
@@ -113,7 +105,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             posIDSelect.appendChild(option);
                         });
                         if (data.pos_ids.length === 1) {
-                            // If there's only one matching ID, select it automatically
                             posIDSelect.value = data.pos_ids[0];
                         }
                     }
@@ -123,26 +114,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Event listener for POS ID selection change
     posIDSelect.addEventListener("change", function () {
         const selectedPosId = posIDSelect.value;
         if (selectedPosId) {
-            fetchPosNames(selectedPosId);  // Fetch POS Names based on POS ID
+            fetchPosNames(selectedPosId);
         }
     });
 
-    // Event listener for POS Name selection change
     posNameSelect.addEventListener("change", function () {
         const selectedPosName = posNameSelect.value;
         if (selectedPosName) {
-            fetchPosNumbers(selectedPosName);  // Fetch POS Numbers based on POS Name
+            fetchPosNumbers(selectedPosName);
         }
     });
 
-    // Fetch and display tasks on the Kanban board
+    // Function to fetch and display tasks in Kanban board
     function fetchAndDisplayKanbanTasks(data) {
-        console.log("Sending data to server for Kanban:", data);
-
         fetch("/api/kanban_tasks", {
             method: 'POST',
             headers: {
@@ -152,13 +139,11 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(response => response.json())
         .then(data => {
-            console.log("Received data for Kanban:", data);
-
-            // Clear existing tasks
-            backlogColumn.innerHTML = "";
-            todoColumn.innerHTML = "";
-            inProgressColumn.innerHTML = "";
-            doneColumn.innerHTML = "";
+            // Clear only the task cards inside each column while preserving the label
+            backlogColumn.querySelectorAll('.task-card').forEach(e => e.remove());
+            todoColumn.querySelectorAll('.task-card').forEach(e => e.remove());
+            inProgressColumn.querySelectorAll('.task-card').forEach(e => e.remove());
+            doneColumn.querySelectorAll('.task-card').forEach(e => e.remove());
 
             // Render tasks in the appropriate columns
             if (data.tasks && data.tasks.length > 0) {
@@ -166,6 +151,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     const taskCard = document.createElement("div");
                     taskCard.className = "card task-card mb-3";
                     taskCard.setAttribute("data-task-id", task.task_id);
+                    taskCard.setAttribute("data-task-status", task.task_status); // To track status for drag-and-drop
                     taskCard.innerHTML = `
                         <div class="card-body">
                             <h5 class="card-title">${task.task_desc || 'No Description'}</h5>
@@ -175,6 +161,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                     `;
 
+                    // Append the task card directly to the relevant column
                     if (task.task_status === "Backlog") {
                         backlogColumn.appendChild(taskCard);
                     } else if (task.task_status === "To Do") {
@@ -185,18 +172,20 @@ document.addEventListener("DOMContentLoaded", function () {
                         doneColumn.appendChild(taskCard);
                     }
                 });
-                console.log("Kanban tasks rendered successfully.");
             } else {
-                backlogColumn.innerHTML = "<p>No Backlog tasks found.</p>";
-                todoColumn.innerHTML = "<p>No To Do tasks found.</p>";
-                inProgressColumn.innerHTML = "<p>No In Progress tasks found.</p>";
-                doneColumn.innerHTML = "<p>No Done tasks found.</p>";
+                // Handle case where no tasks are found
+                backlogColumn.innerHTML += "<p>No Backlog tasks found.</p>";
+                todoColumn.innerHTML += "<p>No To Do tasks found.</p>";
+                inProgressColumn.innerHTML += "<p>No In Progress tasks found.</p>";
+                doneColumn.innerHTML += "<p>No Done tasks found.</p>";
             }
+
+            // Reinitialize sortable for drag-and-drop functionality after rendering tasks
+            initializeSortable();
         })
         .catch(error => console.error("Error fetching Kanban tasks:", error));
     }
 
-    // Event listener for the Filter button
     filterBtn.addEventListener("click", function () {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
@@ -219,7 +208,6 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchAndDisplayKanbanTasks(data);
     });
 
-    // Event listener for the search input field (dynamic filtering)
     taskSearchInput.addEventListener("input", function () {
         const query = taskSearchInput.value;
         const posID = posIDSelect.value;
@@ -242,25 +230,18 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchAndDisplayKanbanTasks(data);
     });
 
-    // Event listener for the Clear Filter button
     clearFilterBtn.addEventListener("click", function () {
-        console.log("Clear filter button clicked");
-
-        // Reset filters
         posIDSelect.value = "";
         posNameSelect.value = "";
         taskSearchInput.value = "";
         setDateInputPlaceholders();
 
-        // Uncheck all status and priority checkboxes
         document.querySelectorAll("input[id^='status'], input[id^='priority']").forEach(checkbox => {
             checkbox.checked = false;
         });
 
-        // Re-fetch all POS names and IDs after clearing the filters
         fetchAllPosNamesAndIds();
 
-        // Fetch tasks without any filters
         fetchAndDisplayKanbanTasks({
             search_query: "",
             pos_id: "",
@@ -274,4 +255,74 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Initial fetch when the page loads
     fetchAndDisplayKanbanTasks({});
+
+    // Initialize sortable for drag-and-drop functionality
+    function initializeSortable() {
+        new Sortable(backlogColumn, {
+            group: 'kanban',
+            animation: 150,
+            onEnd: function (evt) {
+                updateTaskStatus(evt.item, 'Backlog');
+            }
+        });
+
+        new Sortable(todoColumn, {
+            group: 'kanban',
+            animation: 150,
+            onEnd: function (evt) {
+                updateTaskStatus(evt.item, 'To Do');
+            }
+        });
+
+        new Sortable(inProgressColumn, {
+            group: 'kanban',
+            animation: 150,
+            onEnd: function (evt) {
+                updateTaskStatus(evt.item, 'In Progress');
+            }
+        });
+
+        new Sortable(doneColumn, {
+            group: 'kanban',
+            animation: 150,
+            onEnd: function (evt) {
+                updateTaskStatus(evt.item, 'Done');
+            }
+        });
+    }
+
+    // Function to update task status in both frontend and backend
+    function updateTaskStatus(taskElement, newStatus) {
+        const taskId = taskElement.getAttribute('data-task-id');
+        const statusElement = taskElement.querySelector('.card-text strong');
+
+        // Immediately update the UI to reflect the new status
+        statusElement.textContent = `Status: ${newStatus}`;
+        taskElement.setAttribute('data-task-status', newStatus);
+
+        // Send the update request to the backend
+        fetch(`/api/update_task_status/${taskId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                console.error(`Failed to update task ${taskId} in the database. Reverting UI change.`);
+                // Revert the status in the UI if the database update fails
+                statusElement.textContent = `Status: ${taskElement.getAttribute('data-task-status')}`;
+            }
+        })
+        .catch(error => {
+            console.error(`Error updating task ${taskId} status:`, error);
+            // Revert the UI change on error
+            statusElement.textContent = `Status: ${taskElement.getAttribute('data-task-status')}`;
+        });
+    }
+
+    // Initialize sortable after initial fetch
+    initializeSortable();
 });

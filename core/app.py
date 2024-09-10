@@ -759,22 +759,39 @@ def get_kanban_tasks():
 @app.route("/api/update_task_status/<int:task_id>", methods=["POST"])
 @login_required
 def update_task_status(task_id):
-    """Update the status of a task via the Kanban board drag-and-drop."""
-    try:
-        data = request.get_json()
-        new_status = data.get("status")
-        if not new_status:
-            return jsonify({"success": False, "message": "No status provided."}), 400
+    """Update the task's status when dragged and dropped on the Kanban board."""
+    logger.debug(f"Received request to update task {task_id}")
 
+    # Retrieve the new status from the request
+    new_status = request.json.get('status')
+    if not new_status:
+        logger.error(f"No status provided for task {task_id}")
+        return jsonify(success=False, message="No status provided"), 400
+
+    logger.debug(f"Updating task {task_id} to status: {new_status}")
+
+    try:
         with engine.connect() as conn:
-            update_query = tasks_table.update().where(tasks_table.c.task_id == task_id).values(task_status=new_status)
-            conn.execute(update_query)
+            # Execute the update query
+            result = conn.execute(
+                tasks_table.update()
+                .where(tasks_table.c.task_id == task_id)
+                .values(task_status=new_status)
+            )
             conn.commit()
 
-        return jsonify({"success": True})
+            # Log how many rows were affected
+            if result.rowcount == 0:
+                logger.error(f"Task {task_id} not found in the database.")
+                return jsonify(success=False, message="Task not found"), 404
+
+            logger.debug(f"Task {task_id} successfully updated to status: {new_status}")
+            return jsonify(success=True)
 
     except Exception as e:
-        return jsonify({"success": False, "message": "Failed to update task status."}), 500
+        logger.error(f"Error updating task {task_id}: {e}")
+        logger.error(traceback.format_exc())  # Capture the stack trace
+        return jsonify(success=False, message="Failed to update task status"), 500
 
 
 @app.route("/api/pos_names", methods=["GET"])
