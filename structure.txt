@@ -11,10 +11,14 @@
 │   │   ├── 115b8d1c96b0cb912808c4b8fd89e7ad
 │   │   ├── 2029240f6d1128be89ddc32729463129
 │   │   ├── 25c1bd5a07156187c7b0beed0a1614fd
+│   │   ├── 27a8267534c3a77e827ac3294a5a2a08
 │   │   ├── 3384a545330177f20598584fc4ebfec4
+│   │   ├── 3e3cb7dd26eb6aa4dcd38e272f89d186
+│   │   ├── 40782b4a4cb783be601d499bb2837a10
 │   │   ├── 40dd680e8b8ffe1cbcd4bd5d3ca650c3
 │   │   ├── 443cfce86d641e5456893efda28b5643
 │   │   ├── 55e12fc15fbda0f54ced11c299115879
+│   │   ├── 59edf0ea19bc6db1f3868b7b4067c103
 │   │   ├── 799e423e099248571fee7c4346753d29
 │   │   ├── 7b15a1dd8bf0db60ba7094dbb9110410
 │   │   ├── 812dac17609fb16bb678d4af000c9cdc
@@ -24,6 +28,8 @@
 │   │   ├── a440f90a8f56189a7f61483c8184f41a
 │   │   ├── a837e85a5e1c5098b318fff2c325fd94
 │   │   ├── d404270ce7367bd70c451d8a1ece16fe
+│   │   ├── d89f418e18489e173212d63adbe52fb8
+│   │   ├── e0eab5df3d9cebcad68cdd935a9c2370
 │   │   ├── f57e7d336403e4d448a9c495e4ed1e0d
 │   │   └── fc30d537e8eb11c76d7b837a6126de3e
 │   ├── helpers.py
@@ -34,10 +40,12 @@
 │   │   └── js
 │   │       ├── createTasks.js
 │   │       ├── kanban.js
+│   │       ├── modifyTasks.js
 │   │       └── tasksLookup.js
 │   ├── taskflow.db
 │   └── templates
 │       ├── _create_form.html
+│       ├── _modify_form.html
 │       ├── _sidebar.html
 │       ├── _tasks_body.html
 │       ├── create.html
@@ -59,4 +67,4 @@
 ├── requirements.txt
 └── structure.txt
 
-9 directories, 50 files
+9 directories, 58 files

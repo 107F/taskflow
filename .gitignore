@@ -99,11 +99,6 @@ venv.bak/
 # Pyre type checker
 .pyre/
 
-# Local database files (if any)
-*.sqlite3
-*.db
-*.sql
-
 # Jupyter Notebook
 .ipynb_checkpoints
 
