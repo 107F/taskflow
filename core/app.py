@@ -760,38 +760,50 @@ def get_kanban_tasks():
 @login_required
 def update_task_status(task_id):
     """Update the task's status when dragged and dropped on the Kanban board."""
-    logger.debug(f"Received request to update task {task_id}")
+    logger.debug(f"Received request to update task with ID: {task_id}")
 
     # Retrieve the new status from the request
     new_status = request.json.get('status')
+    logger.debug(f"New status from request for task {task_id}: {new_status}")
+
+    # Check if new_status is valid
     if not new_status:
         logger.error(f"No status provided for task {task_id}")
         return jsonify(success=False, message="No status provided"), 400
 
-    logger.debug(f"Updating task {task_id} to status: {new_status}")
-
     try:
         with engine.connect() as conn:
+            logger.debug(f"Executing update query for task {task_id} to set status to {new_status}")
+
             # Execute the update query
             result = conn.execute(
                 tasks_table.update()
                 .where(tasks_table.c.task_id == task_id)
                 .values(task_status=new_status)
             )
-            conn.commit()
 
-            # Log how many rows were affected
-            if result.rowcount == 0:
-                logger.error(f"Task {task_id} not found in the database.")
+            # Check how many rows were affected
+            rows_affected = result.rowcount
+            logger.debug(f"Rows affected by the update for task {task_id}: {rows_affected}")
+
+            if rows_affected == 0:
+                logger.error(f"Task {task_id} not found in the database. No rows affected.")
                 return jsonify(success=False, message="Task not found"), 404
 
-            logger.debug(f"Task {task_id} successfully updated to status: {new_status}")
-            return jsonify(success=True)
+            conn.commit()  # Commit the transaction
+            logger.debug(f"Successfully committed the status update for task {task_id} to {new_status}")
+
+        # Log the success response
+        response = jsonify(success=True)
+        logger.debug(f"Returning success response for task {task_id}: {response.json}")
+        return response
 
     except Exception as e:
-        logger.error(f"Error updating task {task_id}: {e}")
-        logger.error(traceback.format_exc())  # Capture the stack trace
+        # Log the detailed error traceback
+        logger.error(f"Exception occurred while updating task {task_id} status: {e}")
+        logger.error(traceback.format_exc())
         return jsonify(success=False, message="Failed to update task status"), 500
+
 
 
 @app.route("/api/pos_names", methods=["GET"])

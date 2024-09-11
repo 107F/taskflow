@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let isPosIDUpdating = false;
     let isPosNameUpdating = false;
 
+    // Set up date inputs
     function getTodayDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -262,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function () {
             group: 'kanban',
             animation: 150,
             onEnd: function (evt) {
-                updateTaskStatus(evt.item, 'Backlog');
+                handleTaskStatusUpdate(evt.item, 'Backlog');
             }
         });
 
@@ -270,7 +271,7 @@ document.addEventListener("DOMContentLoaded", function () {
             group: 'kanban',
             animation: 150,
             onEnd: function (evt) {
-                updateTaskStatus(evt.item, 'To Do');
+                handleTaskStatusUpdate(evt.item, 'To Do');
             }
         });
 
@@ -278,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function () {
             group: 'kanban',
             animation: 150,
             onEnd: function (evt) {
-                updateTaskStatus(evt.item, 'In Progress');
+                handleTaskStatusUpdate(evt.item, 'In Progress');
             }
         });
 
@@ -286,21 +287,74 @@ document.addEventListener("DOMContentLoaded", function () {
             group: 'kanban',
             animation: 150,
             onEnd: function (evt) {
-                updateTaskStatus(evt.item, 'Done');
+                handleTaskStatusUpdate(evt.item, 'Done');
             }
         });
     }
 
-    // Function to update task status in both frontend and backend
-    function updateTaskStatus(taskElement, newStatus) {
-        const taskId = taskElement.getAttribute('data-task-id');
-        const statusElement = taskElement.querySelector('.card-text strong');
+// Function to handle updating task status in the frontend and backend
+function handleTaskStatusUpdate(taskElement, newStatus) {
+    const taskId = taskElement.getAttribute('data-task-id');
+    const previousStatus = taskElement.getAttribute('data-task-status');
 
-        // Immediately update the UI to reflect the new status
-        statusElement.textContent = `Status: ${newStatus}`;
+    // Find the correct paragraph that holds the Status text
+    const statusElement = Array.from(taskElement.querySelectorAll('.card-text')).find(p => p.innerText.includes('Status'));
+
+    // Ensure that the status is replaced entirely, not appended
+    statusElement.innerHTML = `<strong>Status:</strong> ${newStatus}`;
+    taskElement.setAttribute('data-task-status', newStatus);
+
+    // Send the update request to the backend
+    fetch(`/api/update_task_status/${taskId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error(`Failed to update task ${taskId} in the database.`);
+            // Revert the UI if the update fails
+            statusElement.innerHTML = `<strong>Status:</strong> ${previousStatus}`;
+            taskElement.setAttribute('data-task-status', previousStatus);
+        }
+    })
+    .catch(error => {
+        console.error(`Error updating task ${taskId} status:`, error);
+        // Revert the UI in case of an error
+        statusElement.innerHTML = `<strong>Status:</strong> ${previousStatus}`;
+        taskElement.setAttribute('data-task-status', previousStatus);
+    });
+}
+
+// Function to handle updating task status in the frontend and backend
+function handleTaskStatusUpdate(taskElement) {
+    const taskId = taskElement.getAttribute('data-task-id');
+    const previousStatus = taskElement.getAttribute('data-task-status');
+
+    // Identify the new status based on the column where the task is dropped
+    let newStatus = '';
+    const parentColumnId = taskElement.parentElement.id;
+
+    if (parentColumnId === 'backlog') {
+        newStatus = 'Backlog';
+    } else if (parentColumnId === 'todo') {
+        newStatus = 'To Do';
+    } else if (parentColumnId === 'inprogress') {
+        newStatus = 'In Progress';
+    } else if (parentColumnId === 'done') {
+        newStatus = 'Done';
+    }
+
+    if (newStatus && newStatus !== previousStatus) {
+        // Update the status in the UI
+        const statusElement = Array.from(taskElement.querySelectorAll('.card-text')).find(p => p.innerText.includes('Status'));
+        statusElement.innerHTML = `<strong>Status:</strong> ${newStatus}`;
         taskElement.setAttribute('data-task-status', newStatus);
 
-        // Send the update request to the backend
+        // Send the updated status to the backend
         fetch(`/api/update_task_status/${taskId}`, {
             method: 'POST',
             headers: {
@@ -311,17 +365,61 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             if (!data.success) {
-                console.error(`Failed to update task ${taskId} in the database. Reverting UI change.`);
-                // Revert the status in the UI if the database update fails
-                statusElement.textContent = `Status: ${taskElement.getAttribute('data-task-status')}`;
+                console.error(`Failed to update task ${taskId} in the database.`);
+                // Revert the UI if the update fails
+                statusElement.innerHTML = `<strong>Status:</strong> ${previousStatus}`;
+                taskElement.setAttribute('data-task-status', previousStatus);
             }
         })
         .catch(error => {
             console.error(`Error updating task ${taskId} status:`, error);
-            // Revert the UI change on error
-            statusElement.textContent = `Status: ${taskElement.getAttribute('data-task-status')}`;
+            // Revert the UI in case of an error
+            statusElement.innerHTML = `<strong>Status:</strong> ${previousStatus}`;
+            taskElement.setAttribute('data-task-status', previousStatus);
         });
     }
+}
+
+// Initialize sortable for drag-and-drop functionality
+function initializeSortable() {
+    new Sortable(backlogColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+
+    new Sortable(todoColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+
+    new Sortable(inProgressColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+
+    new Sortable(doneColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+}
+
+// Call the function after the DOM has loaded and the tasks are fetched
+document.addEventListener("DOMContentLoaded", function () {
+    initializeSortable();
+});
+
 
     // Initialize sortable after initial fetch
     initializeSortable();
