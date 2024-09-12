@@ -55,8 +55,8 @@ SessionLocal = sessionmaker(bind=engine)
 @app.route("/")
 @login_required
 def index():
-    """Redirect to the tasks page as the homepage."""
-    return redirect("/tasks")
+    """Redirect to the kanban page as the homepage."""
+    return redirect("/kanban")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -124,7 +124,7 @@ def login():
         # Remember which user has logged in
         session["user_id"] = rows[0][0]
         flash("Logged in successfully!")
-        return redirect("/tasks")
+        return redirect("/kanban")
     else:
         return render_template("login.html")
 
