@@ -1,5 +1,8 @@
 <h1 class="mb-4">Kanban Board</h1>
 
+<!-- "Due Today" button -->
+<button id="dueTodayBtn" class="btn btn-primary mb-3">Due Today</button>
+
 <!-- Kanban Board Columns -->
 <div class="row mt-4 kanban-board">
     <div class="col-lg-3 kanban-column" id="backlog">
@@ -22,6 +25,5 @@
 
 <!-- Include Sortable.js for drag-and-drop functionality -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-
 <!-- Reference to the custom JavaScript file for Kanban functionality -->
 <script src="{{ url_for('static', filename='js/kanban.js') }}"></script>
