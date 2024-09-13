@@ -4,7 +4,7 @@ body {
     background-color: #f8f9fa !important;
     margin: 0 !important;
     padding: 0 !important;
-    text-align: left !important; /* Default left text alignment for the app */
+    text-align: left !important;
 }
 
 /* Navbar styles */
@@ -16,19 +16,33 @@ body {
 .navbar a {
     color: black !important;
     font-weight: 500 !important;
-    text-align: left !important; /* Ensure left text alignment in the navbar */
+    text-align: left !important;
+}
+
+.navbar a:hover {
+    color: #007bff !important;
+}
+
+.navbar .navbar-nav .nav-link {
+    color: black !important;
+}
+
+.navbar-brand {
+    color: black !important;
 }
 
 .navbar .btn {
     background-color: #007bff !important;
+    padding: 8px 16px !important;
+    border-radius: 4px !important;
+    font-size: 16px !important;
     color: white !important;
     text-align: left !important;
 }
 
-/* Styling for the main container */
-.container {
-    margin-top: 20px !important;
-    text-align: left !important; /* Ensure left alignment in the container */
+.navbar .btn:hover {
+    background-color: #0056b3 !important;
+    color: white !important;
 }
 
 /* Button styles */
@@ -36,6 +50,9 @@ body {
     background-color: #007bff !important;
     border: none !important;
     color: white !important;
+    padding: 10px 20px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
     text-align: left !important;
 }
 
@@ -43,13 +60,10 @@ body {
     background-color: #0056b3 !important;
 }
 
-/* Label styles (used for both form and Kanban labels) */
-.form-label {
-    display: block !important;
-    font-weight: bold !important;
-    margin-bottom: 10px !important;
-    font-size: 16px !important;
-    text-align: left !important; /* Left alignment for labels */
+/* Styling for the main container */
+.container {
+    margin-top: 20px !important;
+    text-align: left !important;
 }
 
 /* Form input styles */
@@ -62,9 +76,10 @@ select {
     margin-bottom: 10px !important;
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
-    text-align: left !important; /* Force left alignment for form fields */
+    text-align: left !important;
 }
 
+/* Focused input styles */
 input[type="text"]:focus,
 input[type="password"]:focus,
 textarea:focus,
@@ -78,7 +93,15 @@ select:focus {
     width: 100% !important;
     margin-bottom: 20px !important;
     border-collapse: collapse !important;
-    text-align: left !important; /* Ensure left alignment for table content */
+    text-align: left !important;
+}
+
+.table th,
+.table td {
+    padding: 12px !important;
+    border-bottom: 1px solid #ddd !important;
+    vertical-align: top !important;
+    white-space: normal !important;
 }
 
 .table th {
@@ -90,14 +113,34 @@ select:focus {
     background-color: #f1f1f1 !important;
 }
 
+/* Styles for the "Notes" column */
+.notes-column {
+    width: 40em !important;
+    min-width: 30em !important;
+    max-width: 40em !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+}
+
+/* Table responsive */
+.table-responsive {
+    overflow-x: auto !important;
+    text-align: left !important;
+}
+
+/* Additional padding for task container */
+.tasks-wrapper {
+    padding: 15px !important;
+    text-align: left !important;
+}
+
 /* Kanban Board Styling */
 .kanban-board {
     display: flex !important;
     justify-content: space-between !important;
     margin-top: 20px !important;
-    text-align: left !important; /* Left alignment for Kanban board */
+    text-align: left !important;
 }
-
 
 .kanban-column {
     width: 23% !important;
@@ -105,12 +148,14 @@ select:focus {
     padding: 10px !important;
     border-radius: 5px !important;
     border: 1px solid #ddd !important;
+    text-align: left !important;
 }
 
-.kanban-description {
-    font-size: 0.9em !important;
-    color: #666 !important;
-    margin-bottom: 10px !important;
+.kanban-column h2 {
+    font-size: 18px !important;
+    margin-top: 0 !important;
+    margin-bottom: 15px !important;
+    text-align: left !important;
 }
 
 .kanban-card {
@@ -119,12 +164,57 @@ select:focus {
     border-radius: 5px !important;
     margin-bottom: 10px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-    cursor: move !important;  /* Ensure the cursor is "move" to indicate draggability */
+    cursor: pointer !important;
     text-align: left !important;
 }
 
+/* Filter Sidebar Styling */
+.filter-group {
+    margin-bottom: 16px !important;
+    text-align: left !important;
+}
 
-/* Form styles */
+.filter-title {
+    font-size: 1.5em !important;
+    margin-bottom: 10px !important;
+    text-align: left !important;
+}
+
+.filter-label {
+    display: block !important;
+    margin-bottom: 5px !important;
+    font-weight: bold !important;
+    text-align: left !important;
+}
+
+.filter-buttons {
+    display: flex !important;
+    gap: 10px !important;
+    text-align: left !important;
+}
+
+/* Date picker consistency */
+input[type="date"] {
+    width: 100% !important;
+    text-align: left !important;
+}
+
+/* Form control and group styles */
+.form-control {
+    width: 100% !important;
+    padding: 8px !important;
+    margin-bottom: 10px !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px !important;
+    text-align: left !important;
+}
+
+.form-group {
+    margin-bottom: 20px !important;
+    text-align: left !important;
+}
+
+/* Textarea styles */
 textarea {
     resize: vertical !important;
     overflow: auto !important;
@@ -133,13 +223,4 @@ textarea {
     border: 1px solid #ccc !important;
     border-radius: 4px !important;
     text-align: left !important;
-}
-
-/* Specific styles for the login and register pages */
-.login-container,
-.register-container {
-    text-align: center !important; /* Center the content of the login and register pages */
-    max-width: 400px !important; /* Limit the width of the login and register forms */
-    margin: 0 auto !important; /* Center the container horizontally */
-    padding: 20px !important; /* Add padding around the form */
 }
