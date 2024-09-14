@@ -7,6 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions
 from helpers import apology, login_required
 from datetime import date, datetime
+from math import ceil
 import logging
 import traceback
 
@@ -52,6 +53,36 @@ log.setLevel(logging.ERROR)
 # Configure session maker
 SessionLocal = sessionmaker(bind=engine)
 
+# Set a constant for the number of records per page
+RECORDS_PER_PAGE = 15
+
+def get_paginated_tasks(base_query, page, per_page):
+    """
+    Helper function to paginate tasks based on the provided query.
+    """
+    try:
+        # Correcting the usage of select() for SQLAlchemy 1.4+
+        count_query = select(func.count()).select_from(tasks_table)
+        
+        # Execute the count query to get the total number of records
+        total_records = engine.connect().execute(count_query).scalar()
+        
+        # Calculate total number of pages
+        total_pages = ceil(total_records / per_page)
+
+        logger.debug(f"Total records: {total_records}, Total pages: {total_pages}")
+
+        # Apply limit and offset to the original query for pagination
+        paginated_query = base_query.limit(per_page).offset((page - 1) * per_page)
+        tasks = engine.connect().execute(paginated_query).fetchall()
+
+        return tasks, total_records, total_pages
+
+    except Exception as e:
+        logger.error(f"Error during pagination: {traceback.format_exc()}")
+        return [], 0, 0
+
+
 @app.route("/")
 @login_required
 def index():
@@ -83,7 +114,7 @@ def register():
                 conn.commit()
             flash("Registration successful! Please log in.")
         except Exception as e:
-            logger.error(f"Error during registration: {e}")  # Logging error
+            logger.error(f"Error during registration: {e}")
             return apology("username already exists", 400)
 
         return redirect("/login")
@@ -140,31 +171,36 @@ def logout():
 @app.route("/tasks")
 @login_required
 def tasks():
-    """Display all tasks."""
-    with engine.connect() as conn:
-        query = select(
-            tasks_table.c.task_id,
-            tasks_table.c.task_desc,
-            tasks_table.c.task_status,
-            tasks_table.c.task_priority,
-            tasks_table.c.task_start_date,
-            tasks_table.c.task_due_date,
-            tasks_table.c.task_notes,
-            pos_table.c.pos_id,
-            pos_table.c.pos_name,
-            rec_table.c.rec_date,
-            rec_table.c.rec_certified,
-            blockers_table.c.blocker_desc,
-            blockers_table.c.blocker_responsible
-        ).select_from(
-            tasks_table
-            .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
-            .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
-        ).order_by(desc(tasks_table.c.task_id))
+    """Display all tasks with pagination."""
+    page = request.args.get('page', 1, type=int)
 
-        tasks = conn.execute(query).fetchall()
-        pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+    base_query = select(
+        tasks_table.c.task_id,
+        tasks_table.c.task_desc,
+        tasks_table.c.task_status,
+        tasks_table.c.task_priority,
+        tasks_table.c.task_start_date,
+        tasks_table.c.task_due_date,
+        tasks_table.c.task_notes,
+        pos_table.c.pos_id,
+        pos_table.c.pos_name,
+        rec_table.c.rec_date,
+        rec_table.c.rec_certified,
+        blockers_table.c.blocker_desc,
+        blockers_table.c.blocker_responsible
+    ).select_from(
+        tasks_table
+        .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+        .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+        .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+    ).order_by(desc(tasks_table.c.task_id))
+
+    try:
+        # Fetch paginated tasks
+        tasks, total_records, total_pages = get_paginated_tasks(base_query, page, RECORDS_PER_PAGE)
+
+        if not tasks:
+            logger.warning("No tasks returned from the database.")
 
         formatted_tasks = []
         for task in tasks:
@@ -184,14 +220,21 @@ def tasks():
                 "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
             })
 
-    logger.debug("Formatted tasks for display: %s", formatted_tasks)
-    return render_template("tasks.html", tasks=formatted_tasks, pos_data=pos_data, date=date)
+        logger.debug(f"Formatted tasks for rendering: {formatted_tasks}")
+        return render_template("tasks.html", tasks=formatted_tasks, page=page, total_pages=total_pages, date=date)
+
+    except Exception as e:
+        logger.error(f"Error displaying tasks: {traceback.format_exc()}")
+        flash("An error occurred while loading tasks.")
+        return redirect("/")
+
 
 @app.route("/filter_tasks", methods=["POST"])
 @login_required
 def filter_tasks():
-    """Filter tasks based on given criteria."""
+    """Filter tasks based on given criteria with pagination."""
     data = request.get_json()
+    page = data.get('page', 1)
 
     # Ensure data is not None before accessing keys
     if data is None:
@@ -282,8 +325,13 @@ def filter_tasks():
 
         logger.debug(f"Executing query with conditions: {str(query)}")
 
-        tasks = conn.execute(query).fetchall()
-        logger.debug(f"Fetched tasks: {tasks}")
+        try:
+            # Fetch paginated tasks
+            tasks, total_records, total_pages = get_paginated_tasks(query, page, RECORDS_PER_PAGE)
+            logger.debug(f"Fetched tasks: {tasks}")
+        except Exception as e:
+            logger.error(f"Error fetching filtered tasks: {traceback.format_exc()}")
+            return jsonify({"error": "An error occurred while fetching tasks."}), 500
 
     # Format the tasks to send back to the client
     tasks_list = []
@@ -305,7 +353,7 @@ def filter_tasks():
         })
 
     logger.debug(f"Returning tasks list to client: {tasks_list}")
-    return jsonify(tasks=tasks_list)
+    return jsonify(tasks=tasks_list, page=page, total_pages=total_pages)
 
 @app.route("/create", methods=["GET", "POST"])
 @login_required
@@ -804,8 +852,6 @@ def update_task_status(task_id):
         logger.error(traceback.format_exc())
         return jsonify(success=False, message="Failed to update task status"), 500
 
-
-
 @app.route("/api/pos_names", methods=["GET"])
 @login_required
 def get_pos_names():
@@ -817,7 +863,6 @@ def get_pos_names():
         pos_names_list = [pos_name[0] for pos_name in pos_names]
         return jsonify(success=True, pos_names=pos_names_list)
     return jsonify(success=False)
-
 
 @app.route("/api/pos_ids", methods=["GET"])
 @login_required
@@ -848,10 +893,9 @@ def get_all_pos_names_and_ids():
     except Exception as e:
         return jsonify(success=False, message="Failed to fetch POS Names and IDs."), 500
 
-
 def errorhandler(e):
     """Handle errors by returning a custom error message."""
-    logger.error(f"Error occurred: {e}")  # Log the error
+    logger.error(f"Error occurred: {e}")
     return apology(e.name, e.code)
 
 # Listen for errors

@@ -8,9 +8,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const posNameSelect = document.getElementById("filterPosName");
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
+    const paginationContainer = document.getElementById("paginationContainer"); // Add a container for pagination controls
 
     let isPosIDUpdating = false;
     let isPosNameUpdating = false;
+    let currentPage = 1; // Track the current page
 
     // Get today's date for setting placeholders
     function getTodayDate() {
@@ -134,9 +136,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Fetch and display tasks based on filter
-    function fetchAndDisplayTasks(data) {
+    // Fetch and display tasks based on filter and pagination
+    function fetchAndDisplayTasks(data, page = 1) {
         console.log("Sending data to server:", data);
+
+        data.page = page; // Include the current page number
 
         fetch("/filter_tasks", {
             method: 'POST',
@@ -172,6 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     taskTableBody.innerHTML += row;
                 });
                 console.log("Tasks rendered successfully.");
+                updatePaginationControls(data.page, data.total_pages); // Update pagination controls
             } else {
                 taskTableBody.innerHTML = "<tr><td colspan='13'>No tasks found</td></tr>";
             }
@@ -181,6 +186,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Event listener for the Filter button
     filterBtn.addEventListener("click", function () {
+        currentPage = 1; // Reset to the first page on new filter
+        const data = collectFilterData();
+        fetchAndDisplayTasks(data, currentPage);
+    });
+
+    // Collect filter data
+    function collectFilterData() {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
         const searchQuery = taskSearchInput.value;
@@ -189,7 +201,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const selectedStatuses = getSelectedCheckboxValues("input[id^='status']");
         const selectedPriorities = getSelectedCheckboxValues("input[id^='priority']");
 
-        const data = {
+        return {
             pos_id: posID,
             pos_name: posName,
             search_query: searchQuery,
@@ -198,31 +210,13 @@ document.addEventListener("DOMContentLoaded", function () {
             statuses: selectedStatuses,
             priorities: selectedPriorities
         };
-
-        fetchAndDisplayTasks(data);
-    });
+    }
 
     // Event listener for the search input field (dynamic filtering)
     taskSearchInput.addEventListener("input", function () {
-        const query = taskSearchInput.value;
-        const posID = posIDSelect.value;
-        const posName = posNameSelect.value;
-        const startDate = startDateInput.value !== todayDate ? startDateInput.value : null;
-        const endDate = endDateInput.value !== todayDate ? endDateInput.value : null;
-        const selectedStatuses = getSelectedCheckboxValues("input[id^='status']");
-        const selectedPriorities = getSelectedCheckboxValues("input[id^='priority']");
-
-        const data = {
-            search_query: query,
-            pos_id: posID,
-            pos_name: posName,
-            start_date: startDate,
-            end_date: endDate,
-            statuses: selectedStatuses,
-            priorities: selectedPriorities
-        };
-
-        fetchAndDisplayTasks(data);
+        currentPage = 1; // Reset to the first page on new search
+        const data = collectFilterData();
+        fetchAndDisplayTasks(data, currentPage);
     });
 
     // Event listener for the Clear Filter button
@@ -240,9 +234,45 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchAllPosNamesAndIds();
 
         // Fetch tasks without any filters
-        fetchAndDisplayTasks({});
+        currentPage = 1; // Reset to the first page
+        fetchAndDisplayTasks({}, currentPage);
     });
 
     // Initial fetch when the page loads
-    fetchAndDisplayTasks({});
+    fetchAndDisplayTasks({}, currentPage);
+
+    // Update pagination controls
+    function updatePaginationControls(currentPage, totalPages) {
+        paginationContainer.innerHTML = ""; // Clear existing controls
+
+        // Previous button
+        if (currentPage > 1) {
+            const prevButton = document.createElement("button");
+            prevButton.textContent = "Previous";
+            prevButton.classList.add('btn', 'btn-secondary', 'mr-1');
+            prevButton.addEventListener("click", function () {
+                currentPage--;
+                fetchAndDisplayTasks(collectFilterData(), currentPage);
+            });
+            paginationContainer.appendChild(prevButton);
+        }
+
+        // Display current page and total pages
+        const pageInfo = document.createElement("span");
+        pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
+        pageInfo.classList.add('mr-2');
+        paginationContainer.appendChild(pageInfo);
+
+        // Next button
+        if (currentPage < totalPages) {
+            const nextButton = document.createElement("button");
+            nextButton.textContent = "Next";
+            nextButton.classList.add('btn', 'btn-secondary');
+            nextButton.addEventListener("click", function () {
+                currentPage++;
+                fetchAndDisplayTasks(collectFilterData(), currentPage);
+            });
+            paginationContainer.appendChild(nextButton);
+        }
+    }
 });
