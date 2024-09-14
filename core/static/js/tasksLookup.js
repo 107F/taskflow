@@ -241,38 +241,44 @@ document.addEventListener("DOMContentLoaded", function () {
     // Initial fetch when the page loads
     fetchAndDisplayTasks({}, currentPage);
 
-    // Update pagination controls
-    function updatePaginationControls(currentPage, totalPages) {
-        paginationContainer.innerHTML = ""; // Clear existing controls
+// Update pagination controls
+function updatePaginationControls(currentPage, totalPages) {
+    paginationContainer.innerHTML = ""; // Clear existing controls
 
-        // Previous button
-        if (currentPage > 1) {
-            const prevButton = document.createElement("button");
-            prevButton.textContent = "Previous";
-            prevButton.classList.add('btn', 'btn-secondary', 'mr-1');
-            prevButton.addEventListener("click", function () {
-                currentPage--;
-                fetchAndDisplayTasks(collectFilterData(), currentPage);
-            });
-            paginationContainer.appendChild(prevButton);
-        }
-
-        // Display current page and total pages
-        const pageInfo = document.createElement("span");
-        pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
-        pageInfo.classList.add('mr-2');
-        paginationContainer.appendChild(pageInfo);
-
-        // Next button
-        if (currentPage < totalPages) {
-            const nextButton = document.createElement("button");
-            nextButton.textContent = "Next";
-            nextButton.classList.add('btn', 'btn-secondary');
-            nextButton.addEventListener("click", function () {
-                currentPage++;
-                fetchAndDisplayTasks(collectFilterData(), currentPage);
-            });
-            paginationContainer.appendChild(nextButton);
-        }
+    // Previous link
+    if (currentPage > 1) {
+        const prevLink = document.createElement("a");
+        prevLink.href = "#";
+        prevLink.textContent = "Previous";
+        prevLink.style.fontSize = "0.85em"; // Smaller font size
+        prevLink.style.marginRight = "10px"; // Add some spacing
+        prevLink.addEventListener("click", function (event) {
+            event.preventDefault(); // Prevent default anchor behavior
+            currentPage--;
+            fetchAndDisplayTasks(collectFilterData(), currentPage);
+        });
+        paginationContainer.appendChild(prevLink);
     }
+
+    // Page info
+    const pageInfo = document.createElement("span");
+    pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
+    pageInfo.style.fontSize = "0.85em"; // Smaller font size
+    paginationContainer.appendChild(pageInfo);
+
+    // Next link
+    if (currentPage < totalPages) {
+        const nextLink = document.createElement("a");
+        nextLink.href = "#";
+        nextLink.textContent = "Next";
+        nextLink.style.fontSize = "0.85em"; // Smaller font size
+        nextLink.style.marginLeft = "10px"; // Add some spacing
+        nextLink.addEventListener("click", function (event) {
+            event.preventDefault(); // Prevent default anchor behavior
+            currentPage++;
+            fetchAndDisplayTasks(collectFilterData(), currentPage);
+        });
+        paginationContainer.appendChild(nextLink);
+    }
+}
 });

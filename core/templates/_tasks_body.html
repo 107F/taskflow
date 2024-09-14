@@ -1,5 +1,11 @@
 <div class="tasks-wrapper">
     <h2 class="mt-0">Tasks</h2>
+
+    <!-- Pagination Controls (moved above the table) -->
+    <div id="paginationContainer" class="pagination-container mt-3">
+        <!-- Pagination buttons will be dynamically inserted here by the JavaScript -->
+    </div>
+
     <div class="table-responsive">
         <table class="table table-striped mt-3">
             <thead>
@@ -39,11 +45,6 @@
                 {% endfor %}
             </tbody>
         </table>
-    </div>
-
-    <!-- Pagination Controls -->
-    <div id="paginationContainer" class="pagination-container mt-3">
-        <!-- Pagination buttons will be dynamically inserted here by the JavaScript -->
     </div>
 </div>
 
