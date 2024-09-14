@@ -220,8 +220,12 @@ def tasks():
                 "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
             })
 
+        # Fetch POS data for the dropdowns
+        with engine.connect() as conn:
+            pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+
         logger.debug(f"Formatted tasks for rendering: {formatted_tasks}")
-        return render_template("tasks.html", tasks=formatted_tasks, page=page, total_pages=total_pages, date=date)
+        return render_template("tasks.html", tasks=formatted_tasks, pos_data=pos_data, page=page, total_pages=total_pages, date=date)
 
     except Exception as e:
         logger.error(f"Error displaying tasks: {traceback.format_exc()}")
