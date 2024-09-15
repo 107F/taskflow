@@ -1,13 +1,22 @@
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
-from sqlalchemy import create_engine, MetaData, Table, select, func, and_, or_, desc
-from sqlalchemy.sql.functions import coalesce
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy import select, and_, or_, desc, func
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions
-from helpers import apology, login_required
+from helpers import (
+    apology, 
+    login_required, 
+    get_paginated_tasks, 
+    fetch_pos_data, 
+    format_task, 
+    engine, 
+    tasks_table, 
+    pos_table, 
+    rec_table, 
+    blockers_table, 
+    users_table
+)
 from datetime import date, datetime
-from math import ceil
 import logging
 import traceback
 
@@ -22,27 +31,6 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
-# Set up SQLAlchemy to connect to the SQLite database
-DATABASE_URL = "sqlite:///taskflow.db"
-engine = create_engine(DATABASE_URL, echo=False)  # Disable SQLAlchemy echo to avoid printing SQL to console
-metadata = MetaData()
-metadata.reflect(bind=engine)
-
-# Load tables from the database into SQLAlchemy Table objects
-tasks_table = Table('tasks', metadata, autoload_with=engine)
-pos_table = Table('pos', metadata, autoload_with=engine)
-rec_table = Table('rec', metadata, autoload_with=engine)
-blockers_table = Table('blockers', metadata, autoload_with=engine)
-users_table = Table('users', metadata, autoload_with=engine)
-
-# Configure logging to overwrite the log file at each run
-logging.basicConfig(
-    filename='app.log',
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s:%(message)s',
-    filemode='w'
-)
-
 # Create a logger object
 logger = logging.getLogger(__name__)
 
@@ -50,38 +38,8 @@ logger = logging.getLogger(__name__)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-# Configure session maker
-SessionLocal = sessionmaker(bind=engine)
-
 # Set a constant for the number of records per page
 RECORDS_PER_PAGE = 15
-
-def get_paginated_tasks(base_query, page, per_page):
-    """
-    Helper function to paginate tasks based on the provided query.
-    """
-    try:
-        # Correcting the usage of select() for SQLAlchemy 1.4+
-        count_query = select(func.count()).select_from(tasks_table)
-        
-        # Execute the count query to get the total number of records
-        total_records = engine.connect().execute(count_query).scalar()
-        
-        # Calculate total number of pages
-        total_pages = ceil(total_records / per_page)
-
-        logger.debug(f"Total records: {total_records}, Total pages: {total_pages}")
-
-        # Apply limit and offset to the original query for pagination
-        paginated_query = base_query.limit(per_page).offset((page - 1) * per_page)
-        tasks = engine.connect().execute(paginated_query).fetchall()
-
-        return tasks, total_records, total_pages
-
-    except Exception as e:
-        logger.error(f"Error during pagination: {traceback.format_exc()}")
-        return [], 0, 0
-
 
 @app.route("/")
 @login_required
@@ -202,27 +160,11 @@ def tasks():
         if not tasks:
             logger.warning("No tasks returned from the database.")
 
-        formatted_tasks = []
-        for task in tasks:
-            formatted_tasks.append({
-                "task_id": task.task_id if task.task_id is not None else "n/a",
-                "task_desc": task.task_desc if task.task_desc is not None else "n/a",
-                "task_status": task.task_status if task.task_status is not None else "n/a",
-                "task_priority": task.task_priority if task.task_priority is not None else "n/a",
-                "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if isinstance(task.task_start_date, date) else "n/a",
-                "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if isinstance(task.task_due_date, date) else "n/a",
-                "task_notes": task.task_notes if task.task_notes is not None else "n/a",
-                "pos_id": task.pos_id if task.pos_id is not None else "n/a",
-                "pos_name": task.pos_name if task.pos_name is not None else "n/a",
-                "rec_date": task.rec_date.strftime('%Y-%m-%d') if isinstance(task.rec_date, date) else "n/a",
-                "rec_certified": "Yes" if task.rec_certified is True else "No" if task.rec_certified is False else "n/a",
-                "blocker_desc": task.blocker_desc if task.blocker_desc is not None else "n/a",
-                "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
-            })
+        # Format tasks for rendering
+        formatted_tasks = [format_task(task) for task in tasks]
 
         # Fetch POS data for the dropdowns
-        with engine.connect() as conn:
-            pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+        pos_data = fetch_pos_data()
 
         logger.debug(f"Formatted tasks for rendering: {formatted_tasks}")
         return render_template("tasks.html", tasks=formatted_tasks, pos_data=pos_data, page=page, total_pages=total_pages, date=date)
@@ -232,7 +174,6 @@ def tasks():
         flash("An error occurred while loading tasks.")
         return redirect("/")
 
-
 @app.route("/filter_tasks", methods=["POST"])
 @login_required
 def filter_tasks():
@@ -240,121 +181,90 @@ def filter_tasks():
     data = request.get_json()
     page = data.get('page', 1)
 
-    # Ensure data is not None before accessing keys
     if data is None:
         logger.error("No data received in request")
         return jsonify({"error": "No data received"}), 400
 
-    search_query = data.get("search_query", "").strip() if data.get("search_query") else ""
-    pos_id = data.get("pos_id") if data.get("pos_id") else None
-    pos_name = data.get("pos_name", "").strip() if data.get("pos_name") else ""
-    start_date = data.get("start_date") if data.get("start_date") else None
-    end_date = data.get("end_date") if data.get("end_date") else None
-    statuses = data.get("statuses", []) if data.get("statuses") else []
-    priorities = data.get("priorities", []) if data.get("priorities") else []
+    search_query = data.get("search_query", "").strip()
+    pos_id = data.get("pos_id")
+    pos_name = data.get("pos_name", "").strip()
+    start_date = data.get("start_date")
+    end_date = data.get("end_date")
+    statuses = data.get("statuses", [])
+    priorities = data.get("priorities", [])
 
     logger.debug(f"Received data from client: {data}")
-    logger.debug(f"Parsed filter criteria - Search Query: {search_query}, POS ID: {pos_id}, POS Name: {pos_name}, Start Date: {start_date}, End Date: {end_date}, Statuses: {statuses}, Priorities: {priorities}")
 
-    with engine.connect() as conn:
-        query = select(
-            tasks_table.c.task_id,
-            tasks_table.c.task_desc,
-            tasks_table.c.task_status,
-            tasks_table.c.task_priority,
-            tasks_table.c.task_start_date,
-            tasks_table.c.task_due_date,
-            coalesce(tasks_table.c.task_notes, 'n/a').label('task_notes'),
-            pos_table.c.pos_id,
-            coalesce(pos_table.c.pos_name, 'n/a').label('pos_name'),
-            rec_table.c.rec_date,
-            rec_table.c.rec_certified,
-            coalesce(blockers_table.c.blocker_desc, 'n/a').label('blocker_desc'),
-            coalesce(blockers_table.c.blocker_responsible, 'n/a').label('blocker_responsible')
-        ).select_from(
-            tasks_table.join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
-            .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
-        )
+    base_query = select(
+        tasks_table.c.task_id,
+        tasks_table.c.task_desc,
+        tasks_table.c.task_status,
+        tasks_table.c.task_priority,
+        tasks_table.c.task_start_date,
+        tasks_table.c.task_due_date,
+        tasks_table.c.task_notes,
+        pos_table.c.pos_id,
+        pos_table.c.pos_name,
+        rec_table.c.rec_date,
+        rec_table.c.rec_certified,
+        blockers_table.c.blocker_desc,
+        blockers_table.c.blocker_responsible
+    ).select_from(
+        tasks_table.join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+        .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+        .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+    )
 
-        conditions = []
+    conditions = []
 
-        # Apply search query filter
-        if search_query:
-            conditions.append(or_(
-                func.lower(tasks_table.c.task_desc).like(f"%{search_query.lower()}%"),
-                func.lower(tasks_table.c.task_notes).like(f"%{search_query.lower()}%"),
-                func.lower(pos_table.c.pos_name).like(f"%{search_query.lower()}%")
-            ))
+    # Apply search query filter
+    if search_query:
+        conditions.append(or_(
+            func.lower(tasks_table.c.task_desc).like(f"%{search_query.lower()}%"),
+            func.lower(tasks_table.c.task_notes).like(f"%{search_query.lower()}%"),
+            func.lower(pos_table.c.pos_name).like(f"%{search_query.lower()}%")
+        ))
 
-        # Apply pos_id filter
-        if pos_id:
-            conditions.append(pos_table.c.pos_id == pos_id)
-
-        # Apply pos_name filter
-        if pos_name:
-            conditions.append(pos_table.c.pos_name.ilike(f"%{pos_name}%"))
-
-        # Apply status filter
-        if statuses:
-            conditions.append(tasks_table.c.task_status.in_(statuses))
-
-        # Apply priority filter
-        if priorities:
-            conditions.append(tasks_table.c.task_priority.in_(priorities))
-
-        # Apply start_date filter
-        if start_date:
-            try:
-                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                conditions.append(tasks_table.c.task_start_date >= start_date)
-            except ValueError:
-                logger.error(f"Invalid start date format: {start_date}")
-                start_date = None  # Reset to None if parsing fails
-
-        # Apply end_date filter
-        if end_date:
-            try:
-                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-                conditions.append(tasks_table.c.task_due_date <= end_date)
-            except ValueError:
-                logger.error(f"Invalid end date format: {end_date}")
-                end_date = None  # Reset to None if parsing fails
-
-        # Combine conditions if any
-        if conditions:
-            query = query.where(and_(*conditions))
-
-        query = query.order_by(desc(tasks_table.c.task_id))
-
-        logger.debug(f"Executing query with conditions: {str(query)}")
-
+    # Apply filters if provided
+    if pos_id:
+        conditions.append(pos_table.c.pos_id == pos_id)
+    if pos_name:
+        conditions.append(pos_table.c.pos_name.ilike(f"%{pos_name}%"))
+    if statuses:
+        conditions.append(tasks_table.c.task_status.in_(statuses))
+    if priorities:
+        conditions.append(tasks_table.c.task_priority.in_(priorities))
+    if start_date:
         try:
-            # Fetch paginated tasks
-            tasks, total_records, total_pages = get_paginated_tasks(query, page, RECORDS_PER_PAGE)
-            logger.debug(f"Fetched tasks: {tasks}")
-        except Exception as e:
-            logger.error(f"Error fetching filtered tasks: {traceback.format_exc()}")
-            return jsonify({"error": "An error occurred while fetching tasks."}), 500
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            conditions.append(tasks_table.c.task_start_date >= start_date)
+        except ValueError:
+            logger.error(f"Invalid start date format: {start_date}")
+    if end_date:
+        try:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            conditions.append(tasks_table.c.task_due_date <= end_date)
+        except ValueError:
+            logger.error(f"Invalid end date format: {end_date}")
+
+    # Combine conditions if any
+    if conditions:
+        base_query = base_query.where(and_(*conditions))
+
+    base_query = base_query.order_by(desc(tasks_table.c.task_id))
+
+    logger.debug(f"Executing query with conditions: {str(base_query)}")
+
+    try:
+        # Fetch paginated tasks
+        tasks, total_records, total_pages = get_paginated_tasks(base_query, page, RECORDS_PER_PAGE)
+        logger.debug(f"Fetched tasks: {tasks}")
+    except Exception as e:
+        logger.error(f"Error fetching filtered tasks: {traceback.format_exc()}")
+        return jsonify({"error": "An error occurred while fetching tasks."}), 500
 
     # Format the tasks to send back to the client
-    tasks_list = []
-    for task in tasks:
-        tasks_list.append({
-            "task_id": task[0] if task[0] is not None else "n/a",
-            "task_desc": task[1] if task[1] else "n/a",
-            "task_status": task[2] if task[2] else "n/a",
-            "task_priority": task[3] if task[3] else "n/a",
-            "task_start_date": task[4].strftime('%Y-%m-%d') if isinstance(task[4], date) else "n/a",
-            "task_due_date": task[5].strftime('%Y-%m-%d') if isinstance(task[5], date) else "n/a",
-            "task_notes": task[6] if task[6] else "n/a",
-            "pos_id": task[7] if task[7] else "n/a",
-            "pos_name": task[8] if task[8] else "n/a",
-            "rec_date": task[9].strftime('%Y-%m-%d') if isinstance(task[9], date) else "n/a",
-            "rec_certified": "Yes" if task[10] else "No" if task[10] is not None else "n/a",
-            "blocker_desc": task[11] if task[11] is not None else "n/a",
-            "blocker_responsible": task[12] if task[12] is not None else "n/a"
-        })
+    tasks_list = [format_task(task) for task in tasks]
 
     logger.debug(f"Returning tasks list to client: {tasks_list}")
     return jsonify(tasks=tasks_list, page=page, total_pages=total_pages)
@@ -455,51 +365,34 @@ def create_task():
         return redirect("/tasks")
     else:
         # Fetch POS data for the form dropdown
-        with engine.connect() as conn:
-            pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+        pos_data = fetch_pos_data()
 
-            # Fetch tasks similarly to the `/tasks` route to display them on the create page
-            query = select(
-                tasks_table.c.task_id,
-                tasks_table.c.task_desc,
-                tasks_table.c.task_status,
-                tasks_table.c.task_priority,
-                tasks_table.c.task_start_date,
-                tasks_table.c.task_due_date,
-                tasks_table.c.task_notes,
-                pos_table.c.pos_id,
-                pos_table.c.pos_name,
-                rec_table.c.rec_date,
-                rec_table.c.rec_certified,
-                blockers_table.c.blocker_desc,
-                blockers_table.c.blocker_responsible
-            ).select_from(
-                tasks_table
-                .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-                .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
-                .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
-            ).order_by(desc(tasks_table.c.task_id))
+        # Fetch tasks similarly to the `/tasks` route to display them on the create page
+        query = select(
+            tasks_table.c.task_id,
+            tasks_table.c.task_desc,
+            tasks_table.c.task_status,
+            tasks_table.c.task_priority,
+            tasks_table.c.task_start_date,
+            tasks_table.c.task_due_date,
+            tasks_table.c.task_notes,
+            pos_table.c.pos_id,
+            pos_table.c.pos_name,
+            rec_table.c.rec_date,
+            rec_table.c.rec_certified,
+            blockers_table.c.blocker_desc,
+            blockers_table.c.blocker_responsible
+        ).select_from(
+            tasks_table
+            .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+            .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+        ).order_by(desc(tasks_table.c.task_id))
 
-            tasks = conn.execute(query).fetchall()
+        tasks = engine.connect().execute(query).fetchall()
 
-            # Format tasks for rendering in template
-            formatted_tasks = []
-            for task in tasks:
-                formatted_tasks.append({
-                    "task_id": task.task_id if task.task_id is not None else "n/a",
-                    "task_desc": task.task_desc if task.task_desc is not None else "n/a",
-                    "task_status": task.task_status if task.task_status is not None else "n/a",
-                    "task_priority": task.task_priority if task.task_priority is not None else "n/a",
-                    "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if isinstance(task.task_start_date, date) else "n/a",
-                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if isinstance(task.task_due_date, date) else "n/a",
-                    "task_notes": task.task_notes if task.task_notes is not None else "n/a",
-                    "pos_id": task.pos_id if task.pos_id is not None else "n/a",
-                    "pos_name": task.pos_name if task.pos_name is not None else "n/a",
-                    "rec_date": task.rec_date.strftime('%Y-%m-%d') if isinstance(task.rec_date, date) else "n/a",
-                    "rec_certified": "Yes" if task.rec_certified is True else "No" if task.rec_certified is False else "n/a",
-                    "blocker_desc": task.blocker_desc if task.blocker_desc is not None else "n/a",
-                    "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
-                })
+        # Format tasks for rendering in template
+        formatted_tasks = [format_task(task) for task in tasks]
 
         # Render the create.html with tasks and POS data
         return render_template("create.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
@@ -537,21 +430,7 @@ def get_task(task_id):
 
             if task:
                 # Format the task details for JSON response
-                task_data = {
-                    "task_id": task.task_id,
-                    "task_desc": task.task_desc or "n/a",
-                    "task_status": task.task_status or "n/a",
-                    "task_priority": task.task_priority or "n/a",
-                    "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if task.task_start_date else "n/a",
-                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if task.task_due_date else "n/a",
-                    "task_notes": task.task_notes or "n/a",
-                    "pos_id": task.pos_id,
-                    "pos_name": task.pos_name,
-                    "rec_date": task.rec_date.strftime('%Y-%m-%d') if task.rec_date else "n/a",
-                    "rec_certified": "Yes" if task.rec_certified else "No" if task.rec_certified is not None else "n/a",
-                    "blocker_desc": task.blocker_desc or "n/a",
-                    "blocker_responsible": task.blocker_responsible or "n/a"
-                }
+                task_data = format_task(task)
                 return jsonify({"success": True, "task": task_data})
             else:
                 return jsonify({"success": False, "message": "Task not found."})
@@ -559,7 +438,6 @@ def get_task(task_id):
     except Exception as e:
         logger.error(f"Error fetching task: {traceback.format_exc()}")
         return jsonify({"success": False, "message": "An error occurred while fetching the task."}), 500
-
 
 @app.route("/modify", methods=["GET", "POST"])
 @login_required
@@ -678,55 +556,37 @@ def modify_task():
 
     else:
         # Fetch POS data for the form dropdown
-        with engine.connect() as conn:
-            pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
+        pos_data = fetch_pos_data()
 
-            # Fetch tasks similarly to the `/tasks` route to display them on the modify page
-            query = select(
-                tasks_table.c.task_id,
-                tasks_table.c.task_desc,
-                tasks_table.c.task_status,
-                tasks_table.c.task_priority,
-                tasks_table.c.task_start_date,
-                tasks_table.c.task_due_date,
-                tasks_table.c.task_notes,
-                pos_table.c.pos_id,
-                pos_table.c.pos_name,
-                rec_table.c.rec_date,
-                rec_table.c.rec_certified,
-                blockers_table.c.blocker_desc,
-                blockers_table.c.blocker_responsible
-            ).select_from(
-                tasks_table
-                .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
-                .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
-                .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
-            ).order_by(desc(tasks_table.c.task_id))
+        # Fetch tasks similarly to the `/tasks` route to display them on the modify page
+        query = select(
+            tasks_table.c.task_id,
+            tasks_table.c.task_desc,
+            tasks_table.c.task_status,
+            tasks_table.c.task_priority,
+            tasks_table.c.task_start_date,
+            tasks_table.c.task_due_date,
+            tasks_table.c.task_notes,
+            pos_table.c.pos_id,
+            pos_table.c.pos_name,
+            rec_table.c.rec_date,
+            rec_table.c.rec_certified,
+            blockers_table.c.blocker_desc,
+            blockers_table.c.blocker_responsible
+        ).select_from(
+            tasks_table
+            .join(pos_table, tasks_table.c.pos_id == pos_table.c.pos_id)
+            .outerjoin(rec_table, tasks_table.c.rec_id == rec_table.c.rec_id)
+            .outerjoin(blockers_table, tasks_table.c.blocker_id == blockers_table.c.blocker_id)
+        ).order_by(desc(tasks_table.c.task_id))
 
-            tasks = conn.execute(query).fetchall()
+        tasks = engine.connect().execute(query).fetchall()
 
-            # Format tasks for rendering in template
-            formatted_tasks = []
-            for task in tasks:
-                formatted_tasks.append({
-                    "task_id": task.task_id if task.task_id is not None else "n/a",
-                    "task_desc": task.task_desc if task.task_desc is not None else "n/a",
-                    "task_status": task.task_status if task.task_status is not None else "n/a",
-                    "task_priority": task.task_priority if task.task_priority is not None else "n/a",
-                    "task_start_date": task.task_start_date.strftime('%Y-%m-%d') if isinstance(task.task_start_date, date) else "n/a",
-                    "task_due_date": task.task_due_date.strftime('%Y-%m-%d') if isinstance(task.task_due_date, date) else "n/a",
-                    "task_notes": task.task_notes if task.task_notes is not None else "n/a",
-                    "pos_id": task.pos_id if task.pos_id is not None else "n/a",
-                    "pos_name": task.pos_name if task.pos_name is not None else "n/a",
-                    "rec_date": task.rec_date.strftime('%Y-%m-%d') if isinstance(task.rec_date, date) else "n/a",
-                    "rec_certified": "Yes" if task.rec_certified is True else "No" if task.rec_certified is False else "n/a",
-                    "blocker_desc": task.blocker_desc if task.blocker_desc is not None else "n/a",
-                    "blocker_responsible": task.blocker_responsible if task.blocker_responsible is not None else "n/a"
-                })
+        # Format tasks for rendering in template
+        formatted_tasks = [format_task(task) for task in tasks]
 
         # Render the modify.html with tasks and POS data
         return render_template("modify.html", pos_data=pos_data, tasks=formatted_tasks, date=date)
-
 
 @app.route("/kanban")
 @login_required
