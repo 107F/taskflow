@@ -3,7 +3,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const taskSearchInput = document.getElementById("taskSearch");
     const filterBtn = document.getElementById("filterBtn");
     const clearFilterBtn = document.getElementById("clearFilterBtn");
-    const dueTodayBtn = document.getElementById("dueTodayBtn"); // New button for filtering tasks due today
     const posIDSelect = document.getElementById("filterPosID");
     const posNameSelect = document.getElementById("filterPosName");
     const startDateInput = document.getElementById("startDate");
@@ -188,23 +187,6 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("Error fetching Kanban tasks:", error));
     }
 
-    // Function to filter tasks due today
-    function filterTasksDueToday() {
-        const data = {
-            search_query: "",
-            pos_id: "",
-            pos_name: "",
-            start_date: todayDate,
-            end_date: todayDate,
-            statuses: [],
-            priorities: []
-        };
-        fetchAndDisplayKanbanTasks(data);
-    }
-
-    // Add event listener to the Due Today button
-    dueTodayBtn.addEventListener("click", filterTasksDueToday);
-
     filterBtn.addEventListener("click", function () {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
@@ -310,19 +292,69 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Function to handle updating task status in the frontend and backend
-    function handleTaskStatusUpdate(taskElement, newStatus) {
-        const taskId = taskElement.getAttribute('data-task-id');
-        const previousStatus = taskElement.getAttribute('data-task-status');
+// Function to handle updating task status in the frontend and backend
+function handleTaskStatusUpdate(taskElement, newStatus) {
+    const taskId = taskElement.getAttribute('data-task-id');
+    const previousStatus = taskElement.getAttribute('data-task-status');
 
-        // Find the correct paragraph that holds the Status text
+    // Find the correct paragraph that holds the Status text
+    const statusElement = Array.from(taskElement.querySelectorAll('.card-text')).find(p => p.innerText.includes('Status'));
+
+    // Ensure that the status is replaced entirely, not appended
+    statusElement.innerHTML = `<strong>Status:</strong> ${newStatus}`;
+    taskElement.setAttribute('data-task-status', newStatus);
+
+    // Send the update request to the backend
+    fetch(`/api/update_task_status/${taskId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error(`Failed to update task ${taskId} in the database.`);
+            // Revert the UI if the update fails
+            statusElement.innerHTML = `<strong>Status:</strong> ${previousStatus}`;
+            taskElement.setAttribute('data-task-status', previousStatus);
+        }
+    })
+    .catch(error => {
+        console.error(`Error updating task ${taskId} status:`, error);
+        // Revert the UI in case of an error
+        statusElement.innerHTML = `<strong>Status:</strong> ${previousStatus}`;
+        taskElement.setAttribute('data-task-status', previousStatus);
+    });
+}
+
+// Function to handle updating task status in the frontend and backend
+function handleTaskStatusUpdate(taskElement) {
+    const taskId = taskElement.getAttribute('data-task-id');
+    const previousStatus = taskElement.getAttribute('data-task-status');
+
+    // Identify the new status based on the column where the task is dropped
+    let newStatus = '';
+    const parentColumnId = taskElement.parentElement.id;
+
+    if (parentColumnId === 'backlog') {
+        newStatus = 'Backlog';
+    } else if (parentColumnId === 'todo') {
+        newStatus = 'To Do';
+    } else if (parentColumnId === 'inprogress') {
+        newStatus = 'In Progress';
+    } else if (parentColumnId === 'done') {
+        newStatus = 'Done';
+    }
+
+    if (newStatus && newStatus !== previousStatus) {
+        // Update the status in the UI
         const statusElement = Array.from(taskElement.querySelectorAll('.card-text')).find(p => p.innerText.includes('Status'));
-
-        // Ensure that the status is replaced entirely, not appended
         statusElement.innerHTML = `<strong>Status:</strong> ${newStatus}`;
         taskElement.setAttribute('data-task-status', newStatus);
 
-        // Send the update request to the backend
+        // Send the updated status to the backend
         fetch(`/api/update_task_status/${taskId}`, {
             method: 'POST',
             headers: {
@@ -346,46 +378,48 @@ document.addEventListener("DOMContentLoaded", function () {
             taskElement.setAttribute('data-task-status', previousStatus);
         });
     }
+}
 
-    // Initialize sortable for drag-and-drop functionality
-    function initializeSortable() {
-        new Sortable(backlogColumn, {
-            group: 'kanban',
-            animation: 150,
-            onEnd: function (evt) {
-                handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
-            }
-        });
-
-        new Sortable(todoColumn, {
-            group: 'kanban',
-            animation: 150,
-            onEnd: function (evt) {
-                handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
-            }
-        });
-
-        new Sortable(inProgressColumn, {
-            group: 'kanban',
-            animation: 150,
-            onEnd: function (evt) {
-                handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
-            }
-        });
-
-        new Sortable(doneColumn, {
-            group: 'kanban',
-            animation: 150,
-            onEnd: function (evt) {
-                handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
-            }
-        });
-    }
-
-    // Call the function after the DOM has loaded and the tasks are fetched
-    document.addEventListener("DOMContentLoaded", function () {
-        initializeSortable();
+// Initialize sortable for drag-and-drop functionality
+function initializeSortable() {
+    new Sortable(backlogColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
     });
+
+    new Sortable(todoColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+
+    new Sortable(inProgressColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+
+    new Sortable(doneColumn, {
+        group: 'kanban',
+        animation: 150,
+        onEnd: function (evt) {
+            handleTaskStatusUpdate(evt.item);  // Call status update handler on drop
+        }
+    });
+}
+
+// Call the function after the DOM has loaded and the tasks are fetched
+document.addEventListener("DOMContentLoaded", function () {
+    initializeSortable();
+});
+
 
     // Initialize sortable after initial fetch
     initializeSortable();
