@@ -1,12 +1,44 @@
+<!-- 
+    File: create_task_form.html
+    Developer: Stefania Galatolo, with a pinch of ChatGPT's magic touch.
+    Description: This HTML file contains the form used for creating a new task in the task management app.
+    Stefania tried hard to build it alone, but ChatGPT was her code superhero!
+    
+    This form collects various pieces of information about a task, such as POS Name, POS ID, 
+    Reconciliation Date, and status, among others. It is designed to be comprehensive, 
+    ensuring that all relevant details are captured when creating a new task.
+    
+    Inputs Collected:
+    - POS Name and POS ID: These identify the Point of Sale related to the task.
+    - Reconciliation Date: The date for financial reconciliation.
+    - Certified: Whether the task is certified (Yes/No).
+    - Status: The current stage of the task (e.g., Backlog, To Do, In Progress, Done).
+    - Priority: The task's priority level (e.g., None, Low, Medium, High).
+    - Start Date and Due Date: The period during which the task should be handled.
+    - Description: A detailed explanation of the task.
+    - Blocker Description and Responsible: Details about any issues hindering task progress and who is responsible for resolving them.
+    - Additional Notes: Any other pertinent information related to the task.
+
+    Flow:
+    - User fills out the form fields.
+    - On form submission, the data is sent via POST to the "/create" route in the Flask app for processing and storage in the database.
+    - Includes a JavaScript file 'createTasks.js' to handle additional functionalities such as dynamic updates.
+
+    Interactions with Other Files:
+    - `createTasks.js`: Manages client-side interactivity for this form.
+    - Flask routes (e.g., "/create"): Processes the form data and inserts it into the SQL database.
+-->
+
 <!-- Create Task Form -->
 <form id="createTaskForm" method="POST" action="/create">
     <div class="container-fluid">
         <div class="row">
-            <!-- Column 1 -->
+            <!-- Column 1: POS Information -->
             <div class="col-md-4">
                 <!-- POS Name Selection -->
                 <div class="mb-3">
                     <label for="pos_name" class="form-label">POS Name:</label>
+                    <!-- Dropdown to select POS Name. Values are populated dynamically from the 'pos_data' passed in context -->
                     <select id="pos_name" class="form-control" name="pos_name" required>
                         <option value="" disabled selected>Select POS Name</option>
                         {% for pos in pos_data %}
@@ -18,6 +50,7 @@
                 <!-- POS ID Selection -->
                 <div class="mb-3">
                     <label for="pos_id" class="form-label">POS ID:</label>
+                    <!-- Dropdown to select POS ID. Values are populated dynamically from the 'pos_data' passed in context -->
                     <select id="pos_id" class="form-control" name="pos_id" required>
                         <option value="" disabled selected>Select POS ID</option>
                         {% for pos in pos_data %}
@@ -29,12 +62,14 @@
                 <!-- Reconciliation Date -->
                 <div class="mb-3">
                     <label for="reconciliation_date" class="form-label">Reconciliation Date:</label>
+                    <!-- Date input for reconciliation date, defaults to today's date -->
                     <input id="reconciliation_date" class="form-control" name="reconciliation_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
                 </div>
 
                 <!-- Certified -->
                 <div class="mb-3">
                     <label class="form-label">Certified:</label>
+                    <!-- Radio buttons to select if the task is certified -->
                     <div>
                         <input type="radio" id="certified_yes" name="certified" value="true">
                         <label for="certified_yes">Yes</label>
@@ -46,11 +81,12 @@
                 </div>
             </div>
 
-            <!-- Column 2 -->
+            <!-- Column 2: Task Details -->
             <div class="col-md-4">
                 <!-- Status Radio Buttons -->
                 <div class="mb-3">
                     <label class="form-label">Status:</label>
+                    <!-- Radio buttons for task status selection -->
                     <div>
                         <input type="radio" id="statusBacklog" name="status" value="Backlog">
                         <label for="statusBacklog">Backlog</label>
@@ -72,6 +108,7 @@
                 <!-- Priority Radio Buttons -->
                 <div class="mb-3">
                     <label class="form-label">Priority:</label>
+                    <!-- Radio buttons for task priority selection -->
                     <div>
                         <input type="radio" id="priorityNone" name="priority" value="None">
                         <label for="priorityNone">None</label>
@@ -93,39 +130,45 @@
                 <!-- Start Date -->
                 <div class="mb-3">
                     <label for="start_date" class="form-label">Start Date:</label>
+                    <!-- Date input for task start date, defaults to today's date -->
                     <input id="start_date" class="form-control" name="start_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
                 </div>
 
                 <!-- Due Date -->
                 <div class="mb-3">
                     <label for="due_date" class="form-label">Due Date:</label>
+                    <!-- Date input for task due date, defaults to today's date -->
                     <input id="due_date" class="form-control" name="due_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
                 </div>
             </div>
 
-            <!-- Column 3 -->
+            <!-- Column 3: Descriptions and Notes -->
             <div class="col-md-4">
                 <!-- Task Description -->
                 <div class="mb-3">
                     <label for="description" class="form-label">Task Description:</label>
+                    <!-- Text area for a detailed task description -->
                     <textarea id="description" class="form-control" name="description"></textarea>
                 </div>
 
                 <!-- Blocker Description -->
                 <div class="mb-3">
                     <label for="blocker_desc" class="form-label">Blocker Description:</label>
+                    <!-- Text area for any blockers related to the task -->
                     <textarea id="blocker_desc" class="form-control" name="blocker_desc"></textarea>
                 </div>
 
                 <!-- Blocker Responsible -->
                 <div class="mb-3">
                     <label for="blocker_responsible" class="form-label">Blocker Responsible:</label>
+                    <!-- Text area to specify who is responsible for resolving the blocker -->
                     <textarea id="blocker_responsible" class="form-control" name="blocker_responsible"></textarea>
                 </div>
 
                 <!-- Additional Notes -->
                 <div class="mb-3">
                     <label for="notes" class="form-label">Additional Notes:</label>
+                    <!-- Text area for any additional notes -->
                     <textarea id="notes" class="form-control" name="notes"></textarea>
                 </div>
             </div>

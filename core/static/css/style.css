@@ -1,26 +1,48 @@
-/* General styles for the entire page */
+/* 
+* Stefania Galatolo's Masterpiece
+* Developed in collaboration with ChatGPT 4o, because who needs solo coding when you have an AI sidekick that never complains about coffee breaks?
+* 
+* File: style.css
+* Purpose: Provides the visual styling for the entire task management application, ensuring a user-friendly and aesthetically pleasing interface.
+*
+* Key Sections:
+* - Body and General Styles: Defines the foundational styles for the entire app to ensure a clean, modern look.
+* - Navbar: Styles for the navigation bar to maintain consistency across the app and improve user navigation.
+* - Buttons and Inputs: Creates a cohesive appearance for form elements and buttons, ensuring they are easy to interact with.
+* - Task Table: Ensures that tasks are displayed in an organized and easily digestible manner within tables.
+* - Kanban Board: Sets up the styles for the task Kanban board, enabling users to visually manage tasks.
+* - Filter Sidebar: Styles for the filter section allowing users to sort tasks efficiently.
+*/
+
+/* 
+* General styles for the entire page 
+* Setting the font and background color to establish a clean, modern look
+*/
 body {
-    font-family: Arial, sans-serif !important;
-    background-color: #f8f9fa !important;
+    font-family: Arial, sans-serif !important; /* Ensures a consistent, legible font across the app */
+    background-color: #f8f9fa !important; /* Light background for a calm, neutral appearance */
     margin: 0 !important;
     padding: 0 !important;
     text-align: left !important;
 }
 
-/* Navbar styles */
+/* 
+* Navbar styles 
+* Designed to be minimalistic and ensure easy navigation with clear, distinct links
+*/
 .navbar {
-    background-color: #f8f9fa !important;
-    border-bottom: 1px solid #ddd !important;
+    background-color: #f8f9fa !important; /* Matches the page background for seamless integration */
+    border-bottom: 1px solid #ddd !important; /* Subtle border for separation from the content */
 }
 
 .navbar a {
-    color: black !important;
-    font-weight: 500 !important;
+    color: black !important; /* Black text for high contrast and readability */
+    font-weight: 500 !important; /* Slightly bolder text for emphasis */
     text-align: left !important;
 }
 
 .navbar a:hover {
-    color: #007bff !important;
+    color: #007bff !important; /* Blue on hover to indicate interactivity */
 }
 
 .navbar .navbar-nav .nav-link {
@@ -28,92 +50,110 @@ body {
 }
 
 .navbar-brand {
-    color: black !important;
+    color: black !important; /* Brand text remains black for consistency */
 }
 
 .navbar .btn {
-    background-color: #007bff !important;
-    padding: 8px 16px !important;
-    border-radius: 4px !important;
+    background-color: #007bff !important; /* Primary color for call-to-action */
+    padding: 8px 16px !important; /* Ample padding for a touch-friendly button */
+    border-radius: 4px !important; /* Rounded corners for a modern look */
     font-size: 16px !important;
     color: white !important;
     text-align: left !important;
 }
 
 .navbar .btn:hover {
-    background-color: #0056b3 !important;
+    background-color: #0056b3 !important; /* Darker shade on hover to indicate action */
     color: white !important;
 }
 
-/* Button styles */
+/* 
+* Button styles 
+* Uniform appearance for primary action buttons throughout the app
+*/
 .btn-primary {
-    background-color: #007bff !important;
-    border: none !important;
+    background-color: #007bff !important; /* Matches the primary theme color */
+    border: none !important; /* Removing border for a cleaner look */
     color: white !important;
-    padding: 10px 20px !important;
+    padding: 10px 20px !important; /* Increased padding for a more prominent button */
     border-radius: 4px !important;
     cursor: pointer !important;
     text-align: left !important;
 }
 
 .btn-primary:hover {
-    background-color: #0056b3 !important;
+    background-color: #0056b3 !important; /* Hover effect for user feedback */
 }
 
-/* Styling for the main container */
+/* 
+* Styling for the main container 
+* Provides spacing around the content for better readability
+*/
 .container {
-    margin-top: 20px !important;
+    margin-top: 20px !important; /* Adds space at the top for breathing room */
     text-align: left !important;
 }
 
-/* Form input styles */
+/* 
+* Form input styles 
+* Ensures inputs are styled uniformly and are easy to interact with
+*/
 input[type="text"],
 input[type="password"],
 textarea,
 select {
-    width: 100% !important;
+    width: 100% !important; /* Full-width inputs for consistency */
     padding: 8px !important;
     margin-bottom: 10px !important;
-    border: 1px solid #ccc !important;
+    border: 1px solid #ccc !important; /* Light border to outline the input fields */
     border-radius: 4px !important;
     text-align: left !important;
 }
 
-/* Focused input styles */
+/* 
+* Focused input styles 
+* Highlights focused elements to improve user navigation
+*/
 input[type="text"]:focus,
 input[type="password"]:focus,
 textarea:focus,
 select:focus {
-    border-color: #007bff !important;
+    border-color: #007bff !important; /* Blue border to indicate focus */
     text-align: left !important;
 }
 
-/* Table styles */
+/* 
+* Table styles 
+* Enhances the task list table for better data visualization
+*/
 .table {
     width: 100% !important;
-    margin-bottom: 20px !important;
-    border-collapse: collapse !important;
+    margin-bottom: 20px !important; /* Space below the table for separation */
+    border-collapse: collapse !important; /* Collapse borders for a cleaner table */
     text-align: left !important;
 }
 
 .table th,
 .table td {
-    padding: 12px !important;
-    border-bottom: 1px solid #ddd !important;
+    padding: 12px !important; /* Padding for better readability */
+    border-bottom: 1px solid #ddd !important; /* Light border for row separation */
     vertical-align: top !important;
     white-space: normal !important;
 }
 
 .table th {
-    background-color: #007bff !important;
+    background-color: #007bff !important; /* Blue background for header row */
     color: white !important;
 }
 
 .table tr:hover {
-    background-color: #f1f1f1 !important;
+    background-color: #f1f1f1 !important; /* Highlight row on hover for focus */
 }
 
-/* Styles for the "Notes" column */
+/* 
+* Styles for the "Notes" column 
+* Specific width to ensure text wraps properly without overflowing
+*/
 .notes-column {
     width: 40em !important;
     min-width: 30em !important;
@@ -122,31 +162,40 @@ select:focus {
     word-wrap: break-word !important;
 }
 
-/* Table responsive */
+/* 
+* Table responsive 
+* Enables horizontal scrolling for tables on smaller screens
+*/
 .table-responsive {
     overflow-x: auto !important;
     text-align: left !important;
 }
 
-/* Additional padding for task container */
+/* 
+* Additional padding for task container 
+* Provides space around tasks for a cleaner layout
+*/
 .tasks-wrapper {
     padding: 15px !important;
     text-align: left !important;
 }
 
-/* Kanban Board Styling */
+/* 
+* Kanban Board Styling 
+* Defines the layout and appearance of the Kanban board
+*/
 .kanban-board {
-    display: flex !important;
-    justify-content: space-between !important;
+    display: flex !important; /* Flexbox for a responsive layout */
+    justify-content: space-between !important; /* Evenly space columns */
     margin-top: 20px !important;
     text-align: left !important;
 }
 
 .kanban-column {
-    width: 23% !important;
-    background-color: #e9ecef !important;
+    width: 23% !important; /* Equal width for all columns */
+    background-color: #e9ecef !important; /* Light background for distinction */
     padding: 10px !important;
-    border-radius: 5px !important;
+    border-radius: 5px !important; /* Rounded corners for modern design */
     border: 1px solid #ddd !important;
     text-align: left !important;
 }
@@ -161,45 +210,54 @@ select:focus {
 .kanban-card {
     background-color: white !important;
     padding: 10px !important;
-    border-radius: 5px !important;
+    border-radius: 5px !important; /* Slightly rounded corners */
     margin-bottom: 10px !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Subtle shadow for depth */
+    cursor: pointer !important; /* Indicates that cards are draggable */
     text-align: left !important;
 }
 
-/* Filter Sidebar Styling */
+/* 
+* Filter Sidebar Styling 
+* Ensures the filter section is clearly structured and easy to use
+*/
 .filter-group {
     margin-bottom: 16px !important;
     text-align: left !important;
 }
 
 .filter-title {
-    font-size: 1.5em !important;
+    font-size: 1.5em !important; /* Larger text for section titles */
     margin-bottom: 10px !important;
     text-align: left !important;
 }
 
 .filter-label {
-    display: block !important;
+    display: block !important; /* Block display for full-width labels */
     margin-bottom: 5px !important;
-    font-weight: bold !important;
+    font-weight: bold !important; /* Bold for emphasis */
     text-align: left !important;
 }
 
 .filter-buttons {
-    display: flex !important;
-    gap: 10px !important;
+    display: flex !important; /* Flexbox for easy arrangement */
+    gap: 10px !important; /* Space between buttons */
     text-align: left !important;
 }
 
-/* Date picker consistency */
+/* 
+* Date picker consistency 
+* Full-width styling for date inputs to match other form elements
+*/
 input[type="date"] {
     width: 100% !important;
     text-align: left !important;
 }
 
-/* Form control and group styles */
+/* 
+* Form control and group styles 
+* Consistent appearance for form elements
+*/
 .form-control {
     width: 100% !important;
     padding: 8px !important;
@@ -214,9 +272,12 @@ input[type="date"] {
     text-align: left !important;
 }
 
-/* Textarea styles */
+/* 
+* Textarea styles 
+* Allow vertical resizing for better user experience
+*/
 textarea {
-    resize: vertical !important;
+    resize: vertical !important; /* Allow users to adjust height */
     overflow: auto !important;
     width: 100% !important;
     padding: 8px !important;
@@ -225,7 +286,10 @@ textarea {
     text-align: left !important;
 }
 
-/* Highlight the Task ID field */
+/* 
+* Highlight the Task ID field 
+* Provides visual emphasis on the Task ID input to indicate its importance
+*/
 #task_id {
     border: 2px solid #007bff; /* Blue border to match the primary color scheme */
     background-color: #f0f8ff; /* Very light blue background */
@@ -233,7 +297,10 @@ textarea {
     padding: 10px; /* Extra padding for prominence */
 }
 
-/* Add a focus effect to the Task ID input */
+/* 
+* Add a focus effect to the Task ID input 
+* Enhances user feedback when interacting with this specific field
+*/
 #task_id:focus {
     border-color: #0056b3; /* Darker blue on focus */
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle glow effect */

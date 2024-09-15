@@ -1,5 +1,32 @@
+/*
+ * tasksLookup.js
+ * Developed by Stefania Galatolo with invaluable assistance from ChatGPT 4.0.
+ * You know, Stefania had grand plans for this feature, but it turns out that
+ * async JavaScript was like a foreign language she hadn't quite mastered yet.
+ * Enter ChatGPT, the silent code ninja, helping her conquer the asynchronous
+ * jungle one fetch call at a time.
+ * 
+ * This script is a crucial part of the task management app. It handles:
+ * - Fetching tasks from the server based on user input and filters.
+ * - Filtering tasks by various criteria such as POS ID, POS Name, dates, status, and priority.
+ * - Providing real-time search functionality as the user types.
+ * - Implementing pagination to navigate through the tasks.
+ * 
+ * **Main Components:**
+ * 1. Event Listeners: Attached to DOM elements like filter inputs, search box, and pagination controls.
+ * 2. Fetch Operations: Sends requests to the server to retrieve data, populate dropdowns, and update the task table.
+ * 3. Dynamic DOM Manipulation: Updates the task table and pagination controls based on server responses.
+ * 
+ * **Interactivity with Server and Other Files:**
+ * - Communicates with the Flask backend (`/filter_tasks`, `/api/pos_names_and_ids`, etc.) to fetch and filter task data.
+ * - Works alongside HTML templates and server-side routes defined in Flask to provide a dynamic task management experience.
+ * - Directly manipulates HTML elements within `tasks.html` to display and filter tasks.
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
     // Get references to DOM elements that are frequently used
+    // These elements are used throughout the script to capture user inputs for filtering
+    // and to display the fetched tasks.
     const taskSearchInput = document.getElementById("taskSearch");
     const filterBtn = document.getElementById("filterBtn");
     const clearFilterBtn = document.getElementById("clearFilterBtn");
@@ -8,13 +35,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const posNameSelect = document.getElementById("filterPosName");
     const startDateInput = document.getElementById("startDate");
     const endDateInput = document.getElementById("endDate");
-    const paginationContainer = document.getElementById("paginationContainer"); // Add a container for pagination controls
+    const paginationContainer = document.getElementById("paginationContainer"); // Container for pagination controls
 
-    let isPosIDUpdating = false;
+    let isPosIDUpdating = false;  // Flags to prevent multiple simultaneous updates
     let isPosNameUpdating = false;
     let currentPage = 1; // Track the current page
 
     // Get today's date for setting placeholders
+    // This function provides a formatted date string for today's date
+    // used to set default values and placeholders for date inputs.
     function getTodayDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -23,6 +52,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return `${yyyy}-${mm}-${dd}`;
     }
 
+    // Set date input placeholders to today's date
     const todayDate = getTodayDate();
     setDateInputPlaceholders();
 
@@ -33,6 +63,8 @@ document.addEventListener("DOMContentLoaded", function () {
         endDateInput.placeholder = todayDate;
     }
 
+    // Helper function to get values of selected checkboxes
+    // Collects all checked checkboxes matching the selector and returns their values.
     function getSelectedCheckboxValues(selector) {
         const checkboxes = document.querySelectorAll(selector);
         return Array.from(checkboxes)
@@ -41,6 +73,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Fetch all POS Names and POS IDs for reset
+    // This function fetches available POS names and IDs from the server
+    // to populate the dropdowns with all available options.
     function fetchAllPosNamesAndIds() {
         fetch('/api/pos_names_and_ids')
             .then(response => response.json())
@@ -69,6 +103,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Fetch POS Names based on selected POS ID
+    // This function makes an API call to get POS names related to the selected POS ID
+    // and updates the POS Name dropdown options.
     function fetchPosNames(posId) {
         if (!isPosIDUpdating) {
             isPosIDUpdating = true;
@@ -95,6 +131,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Fetch POS IDs based on selected POS Name
+    // This function makes an API call to get POS IDs related to the selected POS name
+    // and updates the POS ID dropdown options.
     function fetchPosNumbers(posName) {
         if (!isPosNameUpdating) {
             isPosNameUpdating = true;
@@ -121,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Event listener for POS ID selection change
+    // Triggers fetching and updating of POS Names dropdown when POS ID changes.
     posIDSelect.addEventListener("change", function () {
         const selectedPosId = posIDSelect.value;
         if (selectedPosId) {
@@ -129,6 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Event listener for POS Name selection change
+    // Triggers fetching and updating of POS IDs dropdown when POS Name changes.
     posNameSelect.addEventListener("change", function () {
         const selectedPosName = posNameSelect.value;
         if (selectedPosName) {
@@ -137,6 +177,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Fetch and display tasks based on filter and pagination
+    // This function sends a POST request to the server with the current filters
+    // and renders the tasks in the table based on the response.
     function fetchAndDisplayTasks(data, page = 1) {
         console.log("Sending data to server:", data);
 
@@ -156,6 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
             taskTableBody.innerHTML = ""; // Clear the table body
 
             if (data.tasks && data.tasks.length > 0) {
+                // Iterate through the tasks and append them to the table
                 data.tasks.forEach(task => {
                     const row = `
                     <tr>
@@ -185,13 +228,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Event listener for the Filter button
+    // Triggers a fetch request to get tasks based on the current filter criteria.
     filterBtn.addEventListener("click", function () {
         currentPage = 1; // Reset to the first page on new filter
         const data = collectFilterData();
         fetchAndDisplayTasks(data, currentPage);
     });
 
-    // Collect filter data
+    // Collect filter data from inputs
+    // Collects data from all filter inputs to be sent to the server for task filtering.
     function collectFilterData() {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
@@ -213,6 +258,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // Event listener for the search input field (dynamic filtering)
+    // This provides real-time filtering as the user types in the search field.
     taskSearchInput.addEventListener("input", function () {
         currentPage = 1; // Reset to the first page on new search
         const data = collectFilterData();
@@ -220,6 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Event listener for the Clear Filter button
+    // Clears all filters and resets the table to show all tasks.
     clearFilterBtn.addEventListener("click", function () {
         posIDSelect.value = "";
         posNameSelect.value = "";
@@ -241,44 +288,45 @@ document.addEventListener("DOMContentLoaded", function () {
     // Initial fetch when the page loads
     fetchAndDisplayTasks({}, currentPage);
 
-// Update pagination controls
-function updatePaginationControls(currentPage, totalPages) {
-    paginationContainer.innerHTML = ""; // Clear existing controls
+    // Update pagination controls
+    // This function updates the pagination controls based on the current page and total pages.
+    function updatePaginationControls(currentPage, totalPages) {
+        paginationContainer.innerHTML = ""; // Clear existing controls
 
-    // Previous link
-    if (currentPage > 1) {
-        const prevLink = document.createElement("a");
-        prevLink.href = "#";
-        prevLink.textContent = "Previous";
-        prevLink.style.fontSize = "0.85em"; // Smaller font size
-        prevLink.style.marginRight = "10px"; // Add some spacing
-        prevLink.addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent default anchor behavior
-            currentPage--;
-            fetchAndDisplayTasks(collectFilterData(), currentPage);
-        });
-        paginationContainer.appendChild(prevLink);
+        // Previous link
+        if (currentPage > 1) {
+            const prevLink = document.createElement("a");
+            prevLink.href = "#";
+            prevLink.textContent = "Previous";
+            prevLink.style.fontSize = "0.85em"; // Smaller font size
+            prevLink.style.marginRight = "10px"; // Add some spacing
+            prevLink.addEventListener("click", function (event) {
+                event.preventDefault(); // Prevent default anchor behavior
+                currentPage--;
+                fetchAndDisplayTasks(collectFilterData(), currentPage);
+            });
+            paginationContainer.appendChild(prevLink);
+        }
+
+        // Page info
+        const pageInfo = document.createElement("span");
+        pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
+        pageInfo.style.fontSize = "0.85em"; // Smaller font size
+        paginationContainer.appendChild(pageInfo);
+
+        // Next link
+        if (currentPage < totalPages) {
+            const nextLink = document.createElement("a");
+            nextLink.href = "#";
+            nextLink.textContent = "Next";
+            nextLink.style.fontSize = "0.85em"; // Smaller font size
+            nextLink.style.marginLeft = "10px"; // Add some spacing
+            nextLink.addEventListener("click", function (event) {
+                event.preventDefault(); // Prevent default anchor behavior
+                currentPage++;
+                fetchAndDisplayTasks(collectFilterData(), currentPage);
+            });
+            paginationContainer.appendChild(nextLink);
+        }
     }
-
-    // Page info
-    const pageInfo = document.createElement("span");
-    pageInfo.textContent = ` Page ${currentPage} of ${totalPages} `;
-    pageInfo.style.fontSize = "0.85em"; // Smaller font size
-    paginationContainer.appendChild(pageInfo);
-
-    // Next link
-    if (currentPage < totalPages) {
-        const nextLink = document.createElement("a");
-        nextLink.href = "#";
-        nextLink.textContent = "Next";
-        nextLink.style.fontSize = "0.85em"; // Smaller font size
-        nextLink.style.marginLeft = "10px"; // Add some spacing
-        nextLink.addEventListener("click", function (event) {
-            event.preventDefault(); // Prevent default anchor behavior
-            currentPage++;
-            fetchAndDisplayTasks(collectFilterData(), currentPage);
-        });
-        paginationContainer.appendChild(nextLink);
-    }
-}
 });

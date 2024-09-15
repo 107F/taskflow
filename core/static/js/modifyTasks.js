@@ -1,53 +1,96 @@
+/**
+ * modifyTasks.js
+ * Developed by Stefania Galatolo, with a little help from ChatGPT 4.0.
+ * (Coding is tough, and sometimes it's just better to have a co-pilot who never sleeps, right?)
+ *
+ * This script is responsible for handling the modification of tasks in the task management application.
+ * It supports key operations such as:
+ * - Synchronizing POS (Point of Sale) fields between their name and ID.
+ * - Clearing the task modification form.
+ * - Fetching existing task data from the server based on user input.
+ * - Submitting modified task data back to the server for update.
+ * 
+ * This script interacts with the server using GET and POST requests and communicates with
+ * specific API endpoints (`/api/get_task/{task_id}` and `/api/modify_task/{task_id}`).
+ * 
+ * Important connections:
+ * - This file communicates with `app.py` in the backend, where Flask routes handle the task data requests.
+ * - It also works with the HTML form elements on the `modify.html` template page, ensuring that task modification fields are synced.
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
-    const taskIdInput = document.getElementById("task_id");
-    const modifyBtn = document.getElementById("modifyBtn");
+    // Get references to key elements within the document for task modification.
+    const taskIdInput = document.getElementById("task_id"); // Input for the task ID, used to fetch and modify tasks.
+    const modifyBtn = document.getElementById("modifyBtn"); // Button to trigger task modification.
 
-    // Elements for POS selection
-    const posNameSelect = document.getElementById("pos_name");
-    const posIDSelect = document.getElementById("pos_id");
+    // Elements for POS (Point of Sale) selection
+    const posNameSelect = document.getElementById("pos_name"); // Dropdown to select POS by name.
+    const posIDSelect = document.getElementById("pos_id"); // Dropdown to select POS by ID.
 
-    // Certified radio buttons
+    // Certified radio buttons for user to mark if the task is certified or not.
     const certifiedYesRadio = document.getElementById("certified_yes");
     const certifiedNoRadio = document.getElementById("certified_no");
 
-    // Function to synchronize POS fields based on selection
+    /**
+     * Synchronizes POS fields between POS name and POS ID.
+     * This ensures that when one field (POS name or POS ID) is updated, the corresponding
+     * value in the other field is also updated to reflect the selected POS correctly.
+     *
+     * @param {Event} event - The change event triggered when the POS fields are modified.
+     */
     function syncPosFields(event) {
+        // If POS name is changed, update the POS ID field to match.
         if (event.target === posNameSelect) {
             const selectedPosNameOption = posNameSelect.options[posNameSelect.selectedIndex];
             posIDSelect.value = selectedPosNameOption.getAttribute("data-pos-id");
-        } else if (event.target === posIDSelect) {
+        } 
+        // If POS ID is changed, update the POS name field to match.
+        else if (event.target === posIDSelect) {
             const selectedPosIDOption = posIDSelect.options[posIDSelect.selectedIndex];
             posNameSelect.value = selectedPosIDOption.getAttribute("data-pos-name");
         }
     }
 
-    // Event listeners for POS selection
+    // Attach event listeners to POS selection elements to ensure they stay synchronized.
     posNameSelect.addEventListener("change", syncPosFields);
     posIDSelect.addEventListener("change", syncPosFields);
 
-    // Function to clear all form fields
+    /**
+     * Clears all form fields, resetting them to their default values.
+     * This function is useful when no task is selected or when a task needs to be cleared
+     * (e.g., when the user enters an invalid task ID).
+     */
     function clearFormFields() {
-        posNameSelect.value = "";
-        posIDSelect.value = "";
-        document.getElementById("description").value = "";
+        posNameSelect.value = ""; // Clear POS name
+        posIDSelect.value = "";   // Clear POS ID
+        document.getElementById("description").value = ""; // Clear description
         
-        // Clear all status and priority radio buttons
+        // Uncheck all status and priority radio buttons
         document.querySelectorAll('input[name="status"]').forEach(radio => radio.checked = false);
         document.querySelectorAll('input[name="priority"]').forEach(radio => radio.checked = false);
 
-        document.getElementById("start_date").value = "";
-        document.getElementById("due_date").value = "";
-        document.getElementById("reconciliation_date").value = "";
-        document.getElementById("notes").value = "";
-        document.getElementById("blocker_desc").value = "";
-        document.getElementById("blocker_responsible").value = "";
+        document.getElementById("start_date").value = ""; // Clear start date
+        document.getElementById("due_date").value = ""; // Clear due date
+        document.getElementById("reconciliation_date").value = ""; // Clear reconciliation date
+        document.getElementById("notes").value = ""; // Clear notes
+        document.getElementById("blocker_desc").value = ""; // Clear blocker description
+        document.getElementById("blocker_responsible").value = ""; // Clear blocker responsible person
 
         // Clear certified radio buttons
         certifiedYesRadio.checked = false;
         certifiedNoRadio.checked = false;
     }
 
-    // Function to fetch task data
+    /**
+     * Fetches task data from the server based on the provided task ID.
+     * This function sends a GET request to the `/api/get_task/{task_id}` endpoint
+     * to retrieve the task data. The form fields are then populated with the fetched task details.
+     * 
+     * @param {string} taskId - The ID of the task to fetch data for.
+     * 
+     * The server response should include task information such as POS, description, status, priority, 
+     * and reconciliation details, which will be reflected in the form fields.
+     */
     function fetchTaskData(taskId) {
         if (taskId) {
             fetch(`/api/get_task/${taskId}`)
@@ -78,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         document.getElementById("blocker_desc").value = data.task.blocker_desc;
                         document.getElementById("blocker_responsible").value = data.task.blocker_responsible;
 
-                        // Set the certified radio buttons
+                        // Set the certified radio buttons based on the fetched data
                         if (data.task.rec_certified === 'Yes') {
                             certifiedYesRadio.checked = true;
                             certifiedNoRadio.checked = false;
@@ -104,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Listen for changes in the task ID input field
+    // Listen for changes in the task ID input field to trigger task data fetching.
     taskIdInput.addEventListener("input", function () {
         const taskId = taskIdInput.value.trim();
         
@@ -116,7 +159,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Function to modify task data
+    /**
+     * Sends the modified task data to the server for updating the task.
+     * This function gathers all the data from the form and sends a POST request
+     * to the `/api/modify_task/{task_id}` endpoint to update the task details.
+     */
     function modifyTaskData() {
         const taskId = taskIdInput.value.trim();
         if (!taskId) {
@@ -124,19 +171,18 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const formData = new FormData(document.getElementById("modifyTaskForm"));
+        const formData = new FormData(document.getElementById("modifyTaskForm")); // Collect form data
         const formObject = {};
-        formData.forEach((value, key) => formObject[key] = value);
+        formData.forEach((value, key) => formObject[key] = value); // Convert form data to object
 
         fetch(`/api/modify_task/${taskId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(formObject)
+            body: JSON.stringify(formObject) // Send form data as JSON
         })
         .then(response => {
-            // Only show error if the response status is not OK (e.g., 404, 500)
             if (!response.ok) {
                 console.error(`Server error: ${response.statusText}`);
                 throw new Error("Error modifying task");
@@ -146,20 +192,17 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(data => {
             if (data.success) {
                 alert("Task modified successfully!");
-                // Only reload the page if successful
-                window.location.reload();
+                window.location.reload(); // Reload page upon success
             } else {
-                // Only show this message if the server explicitly reports an error
                 alert(data.message || "Failed to modify task.");
             }
         })
         .catch(error => {
-            // Ensure that error messages are only shown for actual errors
             console.error('Error modifying task:', error);
         });
     }
 
-    // Listen for clicks on the "Modify" button
+    // Listen for clicks on the "Modify" button to send the modified data.
     modifyBtn.addEventListener("click", function () {
         modifyTaskData();
     });

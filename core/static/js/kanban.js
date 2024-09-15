@@ -1,23 +1,55 @@
-document.addEventListener("DOMContentLoaded", function () {
-    // Get references to DOM elements
-    const taskSearchInput = document.getElementById("taskSearch");
-    const filterBtn = document.getElementById("filterBtn");
-    const clearFilterBtn = document.getElementById("clearFilterBtn");
-    const posIDSelect = document.getElementById("filterPosID");
-    const posNameSelect = document.getElementById("filterPosName");
-    const startDateInput = document.getElementById("startDate");
-    const endDateInput = document.getElementById("endDate");
-    const dueTodayBtn = document.getElementById("dueTodayBtn"); // Reference to "Due Today" button
+/*
+ * kanban.js
+ * Developed by Stefania Galatolo, with a little help (or a lot) from ChatGPT 4o. 
+ * Let's just say Stefania was about to be lost in the JavaScript jungle, but luckily, ChatGPT swung in on a vine and helped out!
+ *
+ * This script is responsible for handling the entire functionality of the Kanban board in the task management tool.
+ * It manages task filtering, fetching tasks from the server, updating task statuses through a drag-and-drop interface, and initializing the Kanban board columns.
+ * The script utilizes the Fetch API for backend communication and Sortable.js for implementing drag-and-drop functionality on the board.
+ *
+ * Key functionalities include:
+ * - Fetching and displaying tasks in the Kanban board
+ * - Filtering tasks based on search queries, POS IDs, POS Names, statuses, and priorities
+ * - Updating task status through drag-and-drop interaction
+ * - Ensuring synchronization of the front-end display with the backend database
+ *
+ * Inputs:
+ * - User interactions such as searching, filtering, and dragging tasks
+ * - API responses from the server containing task data, POS names, and POS IDs
+ *
+ * Outputs:
+ * - Dynamically updated Kanban board reflecting the current state of tasks
+ * - Visual feedback and task status updates sent to the backend
+ */
 
+// Runs when the DOM content is fully loaded
+document.addEventListener("DOMContentLoaded", function () {
+    // DOM elements references for task search, filtering, and Kanban columns
+    // These elements are crucial for user interaction with the task filtering system and the Kanban board
+    const taskSearchInput = document.getElementById("taskSearch"); // Input field for task search
+    const filterBtn = document.getElementById("filterBtn"); // Button to apply filters
+    const clearFilterBtn = document.getElementById("clearFilterBtn"); // Button to clear all filters
+    const posIDSelect = document.getElementById("filterPosID"); // Dropdown for selecting POS IDs
+    const posNameSelect = document.getElementById("filterPosName"); // Dropdown for selecting POS Names
+    const startDateInput = document.getElementById("startDate"); // Input field for start date filter
+    const endDateInput = document.getElementById("endDate"); // Input field for end date filter
+    const dueTodayBtn = document.getElementById("dueTodayBtn"); // Button to filter tasks due today
+
+    // DOM elements for Kanban columns, representing task statuses
     const backlogColumn = document.getElementById("backlog");
     const todoColumn = document.getElementById("todo");
     const inProgressColumn = document.getElementById("inprogress");
     const doneColumn = document.getElementById("done");
 
-    let isPosIDUpdating = false;
+    // Flags to prevent multiple fetch calls during dropdown updates
+    // These prevent duplicate network requests when updating dropdown options
+    let isPosIDUpdating = false; 
     let isPosNameUpdating = false;
 
-    // Set up date inputs
+    /**
+     * Sets up date inputs to show today's date by default
+     * Used to provide a default filter for tasks due today, enhancing user experience
+     */
     function getTodayDate() {
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -26,9 +58,14 @@ document.addEventListener("DOMContentLoaded", function () {
         return `${yyyy}-${mm}-${dd}`;
     }
 
+    // Today's date is computed once to be used as the default for date filters
     const todayDate = getTodayDate();
     setDateInputPlaceholders();
 
+    /**
+     * Sets placeholders and default values for date inputs to today's date
+     * Ensures that the date inputs have user-friendly defaults
+     */
     function setDateInputPlaceholders() {
         startDateInput.value = todayDate;
         endDateInput.value = todayDate;
@@ -36,6 +73,11 @@ document.addEventListener("DOMContentLoaded", function () {
         endDateInput.placeholder = todayDate;
     }
 
+    /**
+     * Gets the values of all selected checkboxes
+     * @param {string} selector - CSS selector to identify the checkboxes
+     * @returns {Array} - Array of values of checked checkboxes
+     */
     function getSelectedCheckboxValues(selector) {
         const checkboxes = document.querySelectorAll(selector);
         return Array.from(checkboxes)
@@ -43,11 +85,16 @@ document.addEventListener("DOMContentLoaded", function () {
             .map(checkbox => checkbox.value);
     }
 
+    /**
+     * Fetches all POS names and IDs to populate the dropdowns
+     * Interacts with the backend API to get the list of POS names and IDs
+     */
     function fetchAllPosNamesAndIds() {
         fetch('/api/pos_names_and_ids')
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Populate POS Name dropdown with data received from the backend
                     posNameSelect.innerHTML = '<option value="">All</option>';
                     data.pos_names.forEach(posName => {
                         const option = document.createElement("option");
@@ -56,6 +103,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         posNameSelect.appendChild(option);
                     });
 
+                    // Populate POS ID dropdown with data received from the backend
                     posIDSelect.innerHTML = '<option value="">All</option>';
                     data.pos_ids.forEach(posId => {
                         const option = document.createElement("option");
@@ -68,6 +116,11 @@ document.addEventListener("DOMContentLoaded", function () {
             .catch(error => console.error("Error fetching POS Names and IDs:", error));
     }
 
+    /**
+     * Fetches POS Names based on selected POS ID
+     * Prevents redundant fetches using a flag and updates the POS Name dropdown
+     * @param {string} posId - The POS ID selected by the user
+     */
     function fetchPosNames(posId) {
         if (!isPosIDUpdating) {
             isPosIDUpdating = true;
@@ -75,6 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Update POS Name dropdown based on POS ID selection
                         posNameSelect.innerHTML = '<option value="">All</option>';
                         data.pos_names.forEach(posName => {
                             const option = document.createElement("option");
@@ -82,6 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             option.textContent = posName;
                             posNameSelect.appendChild(option);
                         });
+                        // Auto-select the only option if only one POS name is returned
                         if (data.pos_names.length === 1) {
                             posNameSelect.value = data.pos_names[0];
                         }
@@ -92,6 +147,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    /**
+     * Fetches POS IDs based on selected POS Name
+     * Prevents redundant fetches using a flag and updates the POS ID dropdown
+     * @param {string} posName - The POS Name selected by the user
+     */
     function fetchPosNumbers(posName) {
         if (!isPosNameUpdating) {
             isPosNameUpdating = true;
@@ -99,6 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        // Update POS ID dropdown based on POS Name selection
                         posIDSelect.innerHTML = '<option value="">All</option>';
                         data.pos_ids.forEach(posId => {
                             const option = document.createElement("option");
@@ -106,6 +167,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             option.textContent = posId;
                             posIDSelect.appendChild(option);
                         });
+                        // Auto-select the only option if only one POS ID is returned
                         if (data.pos_ids.length === 1) {
                             posIDSelect.value = data.pos_ids[0];
                         }
@@ -116,6 +178,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    // Event listeners to update POS names/IDs when the dropdown selection changes
     posIDSelect.addEventListener("change", function () {
         const selectedPosId = posIDSelect.value;
         if (selectedPosId) {
@@ -130,7 +193,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Function to fetch and display tasks in Kanban board
+    /**
+     * Fetches tasks based on the provided filter criteria and displays them on the Kanban board
+     * This function clears existing tasks from the board and re-populates it with filtered tasks
+     * @param {Object} data - The filter criteria to be sent to the backend
+     */
     function fetchAndDisplayKanbanTasks(data) {
         fetch("/api/kanban_tasks", {
             method: 'POST',
@@ -141,7 +208,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .then(response => response.json())
         .then(data => {
-            // Clear only the task cards inside each column while preserving the label
+            // Clear the task cards inside each column while preserving the label
             backlogColumn.querySelectorAll('.task-card').forEach(e => e.remove());
             todoColumn.querySelectorAll('.task-card').forEach(e => e.remove());
             inProgressColumn.querySelectorAll('.task-card').forEach(e => e.remove());
@@ -188,6 +255,8 @@ document.addEventListener("DOMContentLoaded", function () {
         .catch(error => console.error("Error fetching Kanban tasks:", error));
     }
 
+    // Event listener for the filter button
+    // Applies filters based on user input and fetches matching tasks
     filterBtn.addEventListener("click", function () {
         const posID = posIDSelect.value;
         const posName = posNameSelect.value;
@@ -211,6 +280,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // "Due Today" button event listener
+    // Fetches tasks due today and displays them on the Kanban board
     dueTodayBtn.addEventListener("click", function () {
         const todayDate = getTodayDate();
 
@@ -224,6 +294,8 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchAndDisplayKanbanTasks(data);
     });
 
+    // Event listener for task search input
+    // Fetches tasks based on the search query entered by the user
     taskSearchInput.addEventListener("input", function () {
         const query = taskSearchInput.value;
         const posID = posIDSelect.value;
@@ -246,18 +318,24 @@ document.addEventListener("DOMContentLoaded", function () {
         fetchAndDisplayKanbanTasks(data);
     });
 
+    // Event listener for the clear filter button
+    // Clears all filter inputs and fetches all tasks without any filters
     clearFilterBtn.addEventListener("click", function () {
+        // Clear filter inputs
         posIDSelect.value = "";
         posNameSelect.value = "";
         taskSearchInput.value = "";
         setDateInputPlaceholders();
 
+        // Uncheck all checkboxes
         document.querySelectorAll("input[id^='status'], input[id^='priority']").forEach(checkbox => {
             checkbox.checked = false;
         });
 
+        // Re-fetch POS names and IDs
         fetchAllPosNamesAndIds();
 
+        // Fetch all tasks with no filters
         fetchAndDisplayKanbanTasks({
             search_query: "",
             pos_id: "",
@@ -269,10 +347,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Initial fetch when the page loads
+    // Initial fetch of tasks when the page loads
+    // This ensures the Kanban board is populated as soon as the user visits the page
     fetchAndDisplayKanbanTasks({});
 
-    // Function to handle updating task status in the frontend and backend
+    /**
+     * Handles updating task status in both the frontend and backend
+     * @param {HTMLElement} taskElement - The task element that has been dragged and dropped
+     */
     function handleTaskStatusUpdate(taskElement) {
         const taskId = taskElement.getAttribute('data-task-id');
         const previousStatus = taskElement.getAttribute('data-task-status');
@@ -323,7 +405,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Initialize sortable for drag-and-drop functionality
+    /**
+     * Initializes sortable for drag-and-drop functionality on each column
+     * Uses Sortable.js to enable reordering of tasks within and across columns
+     */
     function initializeSortable() {
         new Sortable(backlogColumn, {
             group: 'kanban',
