@@ -5,19 +5,25 @@
 {% endblock %}
 
 {% block main %}
-    <div class="register-container text-center">
-        <h1>Register</h1>
-        <form action="/register" method="post">
-            <div class="mb-3">
-                <input autocomplete="off" autofocus class="form-control mx-auto w-20" name="username" placeholder="Username" type="text">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-3">
+                <h1 class="text-center mb-3">Register</h1>
+                <form action="/register" method="post">
+                    <div class="mb-2">
+                        <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
+                    </div>
+                    <div class="mb-2">
+                        <input class="form-control" name="password" placeholder="Password" type="password">
+                    </div>
+                    <div class="mb-2">
+                        <input class="form-control" name="confirmation" placeholder="Confirm Password" type="password">
+                    </div>
+                    <div class="text-center">
+                        <button class="btn btn-primary" type="submit">Register</button>
+                    </div>
+                </form>
             </div>
-            <div class="mb-3">
-                <input class="form-control mx-auto w-20" name="password" placeholder="Password" type="password">
-            </div>
-            <div class="mb-3">
-                <input class="form-control mx-auto w-20" name="confirmation" placeholder="Confirm Password" type="password">
-            </div>
-            <button class="btn btn-primary" type="submit">Register</button>
-        </form>
+        </div>
     </div>
 {% endblock %}

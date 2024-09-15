@@ -224,3 +224,17 @@ textarea {
     border-radius: 4px !important;
     text-align: left !important;
 }
+
+/* Highlight the Task ID field */
+#task_id {
+    border: 2px solid #007bff; /* Blue border to match the primary color scheme */
+    background-color: #f0f8ff; /* Very light blue background */
+    font-size: 1.1em; /* Slightly larger font */
+    padding: 10px; /* Extra padding for prominence */
+}
+
+/* Add a focus effect to the Task ID input */
+#task_id:focus {
+    border-color: #0056b3; /* Darker blue on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Subtle glow effect */
+}
