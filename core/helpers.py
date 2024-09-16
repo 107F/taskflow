@@ -23,9 +23,10 @@ from flask import redirect, render_template, session
 from functools import wraps
 from sqlalchemy import create_engine, MetaData, Table, select, func
 from sqlalchemy.orm import sessionmaker
-from datetime import date, datetime
+from datetime import date
 from math import ceil
 import logging
+import os
 import traceback
 
 # Configure logging to overwrite the log file at each run
@@ -42,19 +43,31 @@ logger = logging.getLogger(__name__)
 # Set up SQLAlchemy to connect to the SQLite database
 # Using SQLAlchemy to establish a connection with the database, 
 # making it possible to query and manipulate data using ORM methods.
-DATABASE_URL = "sqlite:///taskflow.db"
-engine = create_engine(DATABASE_URL, echo=False)
-metadata = MetaData()
-metadata.reflect(bind=engine)
+
+# Create an absolute path for the database
+base_dir = os.path.abspath(os.path.dirname(__file__))
+database_path = os.path.join(base_dir, 'taskflow.db')
+DATABASE_URL = f"sqlite:///{database_path}"
+
+try:
+    engine = create_engine(DATABASE_URL, echo=False)
+    metadata = MetaData()
+    metadata.reflect(bind=engine)
+except Exception as e:
+    logger.error(f"Error establishing database connection: {traceback.format_exc()}")
 
 # Load tables from the database into SQLAlchemy Table objects
 # Reflects the database schema into Table objects, making it easier 
 # to query and manage the data in those tables.
-tasks_table = Table('tasks', metadata, autoload_with=engine)
-pos_table = Table('pos', metadata, autoload_with=engine)
-rec_table = Table('rec', metadata, autoload_with=engine)
-blockers_table = Table('blockers', metadata, autoload_with=engine)
-users_table = Table('users', metadata, autoload_with=engine)
+
+try:
+    tasks_table = Table('tasks', metadata, autoload_with=engine)
+    pos_table = Table('pos', metadata, autoload_with=engine)
+    rec_table = Table('rec', metadata, autoload_with=engine)
+    blockers_table = Table('blockers', metadata, autoload_with=engine)
+    users_table = Table('users', metadata, autoload_with=engine)
+except Exception as e:
+    logger.error(f"Error reflecting database tables: {traceback.format_exc()}")
 
 # Configure session maker
 # Establishes a session factory for interacting with the database, 

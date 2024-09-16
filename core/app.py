@@ -33,7 +33,7 @@ from flask_session import Session
 from sqlalchemy import select, and_, or_, desc, func
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.exceptions import default_exceptions
-from helpers import (
+from core.helpers import (
     apology, 
     login_required, 
     get_paginated_tasks, 
