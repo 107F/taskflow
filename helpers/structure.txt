@@ -1,64 +1,101 @@
 .
-├── C__
-│   └── Users
-│       └── micro
-│           └── Downloads
-│               └── final
-│                   └── tasks.db
 ├── README.md
-├── __pycache__
-│   ├── app.cpython-310.pyc
-│   └── helpers.cpython-310.pyc
-├── app.log
-├── app.py
-├── db_foreignkeys_update.py
-├── db_notnull_update.py
-├── db_setup.py
-├── del_dev_HELPERS
+├── all_code_structure.txt
+├── consolidated.py
+├── core
+│   ├── __pycache__
+│   │   ├── app.cpython-310.pyc
+│   │   └── helpers.cpython-310.pyc
+│   ├── app.log
+│   ├── app.py
+│   ├── flask_session
+│   │   ├── 00c6e53ddd4282b56027e7a75655bd85
+│   │   ├── 05af2f2d8e1024414e135bd9e705fbb0
+│   │   ├── 0c4666db49461f8e01d05ac58526c963
+│   │   ├── 0e5dc79c73308bbcc0a6fcfb17b86521
+│   │   ├── 115b8d1c96b0cb912808c4b8fd89e7ad
+│   │   ├── 1763b533fbe5536f111ecb0b76a5dfaf
+│   │   ├── 2029240f6d1128be89ddc32729463129
+│   │   ├── 25c1bd5a07156187c7b0beed0a1614fd
+│   │   ├── 27a8267534c3a77e827ac3294a5a2a08
+│   │   ├── 2b5c04fe7ece52ef32b1b405f295342f
+│   │   ├── 3384a545330177f20598584fc4ebfec4
+│   │   ├── 3e3cb7dd26eb6aa4dcd38e272f89d186
+│   │   ├── 40782b4a4cb783be601d499bb2837a10
+│   │   ├── 40dd680e8b8ffe1cbcd4bd5d3ca650c3
+│   │   ├── 443cfce86d641e5456893efda28b5643
+│   │   ├── 44983bc52be68ff0a8857b991fca48d4
+│   │   ├── 55e12fc15fbda0f54ced11c299115879
+│   │   ├── 59edf0ea19bc6db1f3868b7b4067c103
+│   │   ├── 799e423e099248571fee7c4346753d29
+│   │   ├── 7a67f48132897b17e29ae73895f26948
+│   │   ├── 7b15a1dd8bf0db60ba7094dbb9110410
+│   │   ├── 812dac17609fb16bb678d4af000c9cdc
+│   │   ├── 81cc1d6592d32f2b9fbce0c2dbc5bcd6
+│   │   ├── 87eafa91e2f3a41a08836488b73f997c
+│   │   ├── 8be10375be756668d6f7b2eb12649b7f
+│   │   ├── 98317db603d3d75d953039b897e5f565
+│   │   ├── 9d0e60859f615fe436f548108763d63b
+│   │   ├── a440f90a8f56189a7f61483c8184f41a
+│   │   ├── a837e85a5e1c5098b318fff2c325fd94
+│   │   ├── b27cf6868cbf717218fbc6aa543c719c
+│   │   ├── d404270ce7367bd70c451d8a1ece16fe
+│   │   ├── d89f418e18489e173212d63adbe52fb8
+│   │   ├── e0eab5df3d9cebcad68cdd935a9c2370
+│   │   ├── f3070d03df5c5d1e2a58b0b3fdd5409b
+│   │   ├── f57e7d336403e4d448a9c495e4ed1e0d
+│   │   ├── f58ab402efbe0ab9a32b50986e18f656
+│   │   ├── fc30d537e8eb11c76d7b837a6126de3e
+│   │   └── fcf2dcaebe77c5370909b6a73b5f690a
+│   ├── helpers.py
+│   ├── static
+│   │   ├── css
+│   │   │   └── style.css
+│   │   ├── images
+│   │   │   └── favicon.webp
+│   │   └── js
+│   │       ├── createTasks.js
+│   │       ├── kanban.js
+│   │       ├── modifyTasks.js
+│   │       └── tasksLookup.js
+│   ├── taskflow.db
+│   └── templates
+│       ├── _create_form.html
+│       ├── _kanban_board.html
+│       ├── _modify_form.html
+│       ├── _sidebar.html
+│       ├── _tasks_body.html
+│       ├── create.html
+│       ├── error.html
+│       ├── kanban.html
+│       ├── layout.html
+│       ├── login.html
+│       ├── modify.html
+│       ├── register.html
+│       └── tasks.html
+├── docs
+│   ├── Architecture_Documentation.md
+│   ├── agile_development_process.txt
+│   ├── data_flow.png
+│   ├── db_schema.png
+│   ├── product_backlog.md
+│   ├── product_requirements.md
+│   ├── project_timeline.md
+│   ├── refactoring_roadmap.txt
+│   ├── sprint_review_report.md
+│   ├── system_architecture.png
+│   └── user_stories.md
+├── helpers
 │   ├── TaskFlow-Tasks-screenclip1.png
-│   └── db_schema.txt
-├── flask_session
-│   ├── 00c6e53ddd4282b56027e7a75655bd85
-│   ├── 115b8d1c96b0cb912808c4b8fd89e7ad
-│   ├── 2029240f6d1128be89ddc32729463129
-│   ├── 25c1bd5a07156187c7b0beed0a1614fd
-│   ├── 3384a545330177f20598584fc4ebfec4
-│   ├── 40dd680e8b8ffe1cbcd4bd5d3ca650c3
-│   ├── 443cfce86d641e5456893efda28b5643
-│   ├── 55e12fc15fbda0f54ced11c299115879
-│   ├── 799e423e099248571fee7c4346753d29
-│   ├── 812dac17609fb16bb678d4af000c9cdc
-│   ├── 87eafa91e2f3a41a08836488b73f997c
-│   ├── 98317db603d3d75d953039b897e5f565
-│   ├── a440f90a8f56189a7f61483c8184f41a
-│   ├── d404270ce7367bd70c451d8a1ece16fe
-│   └── f57e7d336403e4d448a9c495e4ed1e0d
-├── helpers.py
-├── kb.csv
+│   ├── all_code_structure.txt
+│   ├── cons.py
+│   ├── db_foreignkeys_update.py
+│   ├── db_notnull_update.py
+│   ├── db_schema.txt
+│   ├── db_setup.py
+│   ├── kb.csv
+│   └── structure.txt
 ├── requirements.txt
-├── static
-│   ├── css
-│   │   └── style.css
-│   ├── images
-│   └── js
-│       ├── createTasks.js
-│       ├── kanban.js
-│       └── tasksLookup.js
-├── structure.txt
-├── taskflow - Copy.db
-├── taskflow.db
-├── taskflowold.db
-└── templates
-    ├── _create_form.html
-    ├── _sidebar.html
-    ├── _tasks_body.html
-    ├── create.html
-    ├── error.html
-    ├── kanban.html
-    ├── layout.html
-    ├── login.html
-    ├── modify.html
-    ├── register.html
-    └── tasks.html
+└── structure.txt
 
-13 directories, 48 files
+10 directories, 88 files

@@ -1,0 +1,146 @@
+# Agile Development Process
+
+The objective of this project is to develop a Kanban board task management system for the accounts payable department of a grocery and consumer goods retailer with 28 points of sale. The application transitions from managing a CSV file to implementing a robust SQL database and is developed using Python, Flask, HTML, CSS, and JavaScript. An Agile approach is employed, with work broken down into sprints and managed through Git and GitHub using Visual Studio Code.
+
+The core feature is a Kanban board that allows users to interact with task records in the database via a graphical user interface, providing functionality for updating records through drag-and-drop actions.
+
+The project aims to deliver an intuitive task management tool, inspired by popular applications such as Trello and Jira, closely mirroring the structure of the CS50 finance problem set.
+
+**Note:** This is a solo developer project, and the estimated timeline is an initial sketch that may be revised as the project progresses. The total estimated time is spread over approximately three to four weeks.
+
+## Sprint 0: Project Planning & Stakeholder Requirements (Week 1)
+**Objective:** Establish the project scope and compile all necessary requirements.
+
+- **Task 1:** Stakeholder Identification
+  - Identify the primary stakeholder and outline their needs for the accounts payable management tool.
+
+- **Task 2:** Define Project Objectives
+  - Set the scope of the project, focusing on essential features such as task tracking, visualization in a Kanban board, and drag-and-drop task management.
+
+- **Task 3:** User Stories Creation
+  - Develop user stories to represent key functionalities:
+    - User authentication and secure task management access.
+    - Visualization of tasks in a Kanban board format.
+    - CRUD (Create, Read, Update, Delete) operations on tasks.
+    - Advanced task filtering and search capabilities.
+
+- **Task 4:** User Story Prioritization
+  - Prioritize user stories based on their impact and feasibility, focusing on core functionalities such as the Kanban board and basic task management.
+
+- **Task 5:** Product Backlog Creation
+  - Create a product backlog that details all identified features and tasks, establishing a foundation for sprint planning.
+
+## Sprint 1: Environment Setup & User Authentication (Week 1-2)
+**Objective:** Configure the development environment and implement user authentication.
+
+- **Task 1:** Repository Initialization
+  - Initialize a GitHub repository for version control and set up local development in Visual Studio Code.
+
+- **Task 2:** Project Structure Setup
+  - Establish the Flask project structure with a virtual environment, organizing directories for templates, static assets, and application logic.
+
+- **Task 3:** Database Schema Design for User Accounts
+  - Use SQLAlchemy to design the database schema for user accounts, including tables for user credentials and session management.
+
+- **Task 4:** Implement User Authentication
+  - Develop Flask routes for user registration, login, and logout functionalities.
+  - Implement input validation and password hashing to enhance security.
+  - Create session management to maintain user states.
+
+- **Task 5:** Front-End Template Development
+  - Design and implement HTML and CSS templates for user registration, login, and logout interfaces.
+
+## Sprint 2: Core Task Management Development (Week 2-3)
+**Objective:** Implement the foundational task management features, including task creation and display.
+
+- **Task 1:** Task Database Schema Design
+  - Create an SQLAlchemy schema for tasks, including fields such as `id`, `title`, `description`, `status`, `priority`, and timestamps.
+
+- **Task 2:** Develop Task Display Routes
+  - Implement Flask routes to display tasks on the home page, integrating with the database to fetch task data.
+
+- **Task 3:** Implement Task Creation
+  - Create a form for task creation with server-side validation.
+  - Develop Flask routes to handle form submissions and insert task data into the database.
+
+- **Task 4:** Data Validation and Sanitization
+  - Implement input validation and sanitization to ensure data integrity and security.
+
+- **Task 5:** Task Data Storage and Display
+  - Store tasks in the database and utilize Jinja2 templates to render tasks in a table format on the home page.
+
+## Sprint 3: Kanban Board Implementation (Week 3)
+**Objective:** Develop an interactive Kanban board for task visualization and management.
+
+- **Task 1:** Kanban Board Research and Library Selection
+  - Investigate available JavaScript libraries for implementing a Kanban board and select an appropriate one for integration.
+
+- **Task 2:** Develop Kanban Page Route
+  - Create a Flask route to serve the Kanban board page, integrating it with the existing task management system.
+
+- **Task 3:** Implement Drag-and-Drop Functionality
+  - Use the chosen JavaScript library to enable drag-and-drop functionality within the Kanban board, allowing tasks to be moved between columns.
+
+- **Task 4:** Implement Database Updates from Kanban Board
+  - Develop AJAX calls to update task status in the database when tasks are moved on the Kanban board.
+
+- **Task 5:** Dynamic Data Integration
+  - Fetch task data from the database and populate the Kanban board dynamically using JSON.
+
+- **Task 6:** User Interface Refinement
+  - Enhance the user interface with CSS for a polished look and smooth user interactions.
+
+## Sprint 4: Testing & Debugging (Week 3-4)
+**Objective:** Conduct comprehensive testing and debugging to ensure application stability and performance.
+
+- **Task 1:** Unit Testing for Flask Routes
+  - Write unit tests for critical Flask routes, including user authentication and task management endpoints.
+
+- **Task 2:** End-to-End Testing
+  - Perform end-to-end testing of key user stories to ensure the application behaves as expected.
+
+- **Task 3:** Debugging and Issue Resolution
+  - Identify and resolve any bugs discovered during testing, focusing on data flow and user interaction issues.
+
+- **Task 4:** Functional Testing of Core Features
+  - Test core functionalities such as user authentication, task creation, and the Kanban board for consistency and reliability.
+
+- **Task 5:** Cross-Browser and Responsive Design Verification
+  - Verify the application's compatibility across different browsers and devices, ensuring a responsive design.
+
+## Sprint 5: Deployment & Presentation Preparation (Week 4)
+**Objective:** Deploy the application to a production environment and prepare for the final presentation.
+
+- **Task 1:** Production Environment Setup
+  - Set up the production environment using Gunicorn or a preferred platform for deployment.
+
+- **Task 2:** Database Migration
+  - Migrate the SQL database schema and data to the production server.
+
+- **Task 3:** Final Testing on Live Environment
+  - Conduct a final round of testing on the deployed application to ensure all features are functioning correctly.
+
+- **Task 4:** Presentation Preparation
+  - Prepare a final presentation summarizing the project goals, key features, challenges, and a live demonstration of the application.
+
+- **Task 5:** Final Code Push and Release Tagging
+  - Push all final changes to GitHub and tag the release version for reference.
+
+## Sprint 6: Presentation & Feedback Collection (Week 4)
+**Objective:** Present the project and gather feedback for future improvements.
+
+- **Task 1:** Deliver the Presentation
+  - Conduct a presentation showcasing the application, demonstrating key features and the problem it solves.
+
+- **Task 2:** Live Demonstration
+  - Perform a live demonstration of the application's functionality, highlighting the Kanban board and task management capabilities.
+
+- **Task 3:** Collect Feedback
+  - Gather feedback on the application from stakeholders or audience members, noting areas for potential improvement.
+
+- **Task 4:** Reflection and Planning for Future Enhancements
+  - Reflect on the feedback received and outline a plan for any post-presentation improvements or future feature development.
+
+---
+
+This Agile development process outlines a structured approach to building a comprehensive Kanban board task management system. The estimated timeline is spread over approximately three to four weeks, recognizing that this is a solo developer project and may require adjustments as the project evolves.
