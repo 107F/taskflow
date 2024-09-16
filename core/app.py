@@ -28,6 +28,7 @@ Correlations:
 - Implements RESTful API principles for client-server interactions.
 """
 
+import os
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from sqlalchemy import select, and_, or_, desc, func
@@ -52,6 +53,7 @@ import traceback
 
 # Configure application
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('6e2f996247e3efcee66f23ffd99b7322383a130a7cc345b03b848ddc54e52412')
 
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
