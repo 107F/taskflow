@@ -87,7 +87,7 @@ The initial product backlog was created to outline all features and tasks requir
 ### Sprint 6: Deployment & Presentation Preparation (Week 4)
 - **Objective:** Deploy the application to a production environment and prepare for the final presentation.
 - **Tasks:**
-  - Set up a production environment using Gunicorn.
+  - Set up a production environment using Gunicorn and Nginx.
   - Migrated the database schema and data to the production server.
   - Conducted a final round of testing on the live environment to ensure functionality.
   - Prepared the final presentation to demonstrate the application, highlighting key features and user stories.
