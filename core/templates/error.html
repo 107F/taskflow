@@ -1,15 +1,37 @@
-{% extends "layout.html" %}
-
-{% block title %}
-    Error
-{% endblock %}
-
-{% block main %}
-<div class="text-center mb-3">
-    <div>
-        <h1>Error</h1>
-        <p>{{ message }}</p>
-        <a href="/" class="btn btn-primary">Go Home</a>
+{# 
+    File: error.html
+    Developed by Stefania Galatolo, assisted by ChatGPT 4o, the code wizard who kept Stefania from tearing her hair out. Who knew error handling could be this much fun?
+    
+    ### Description:
+    - This template is used to display error messages in the web application.
+    - It extends the base layout (`layout.html`), inheriting the common structure and styling.
+    - The `message` variable is passed to this template from the Flask route handling errors, allowing dynamic error messages to be displayed.
+    
+    ### Inputs:
+    - `message`: A string passed from the server, containing the error message to be displayed.
+    
+    ### Outputs:
+    - Renders an HTML page with an error message and a "Go Home" button for navigation.
+    
+    ### Flow:
+    1. Inherits the layout from `layout.html`.
+    2. Overrides the `title` block to set the page title to "Error".
+    3. Overrides the `main` block to include the error message and a navigation button.
+    #}
+    
+    {% extends "layout.html" %}
+    
+    {% block title %}
+        Error
+    {% endblock %}
+    
+    {% block main %}
+    <div class="text-center mb-3">
+        <div>
+            <h1>Error</h1>
+            <p>{{ message }}</p> {# Displays the error message passed from the Flask route #}
+            <a href="/" class="btn btn-primary">Go Home</a> {# Button to navigate back to the home page #}
+        </div>
     </div>
-</div>
-{% endblock %}
+    {% endblock %}
+    

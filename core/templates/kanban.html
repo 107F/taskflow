@@ -1,4 +1,29 @@
 <!-- kanban.html -->
+{# 
+    File: kanban.html
+    Description: This is the main HTML template for the Kanban board feature in the task management application. 
+    The template extends 'layout.html', providing a structured view of tasks categorized into different statuses 
+    (e.g., Backlog, To Do, In Progress, Done) in a visual drag-and-drop board. The Kanban board is essential for 
+    offering users an intuitive way to track and manage tasks through various stages of completion.
+
+    Inputs: 
+    - Extends the 'layout.html' file, which provides the common structure including header, footer, and navigation.
+    - Includes '_sidebar.html' for filtering options and task navigation.
+    - Includes '_kanban_board.html' for the actual Kanban board layout and task cards.
+
+    Outputs:
+    - Renders a full-page Kanban board within the layout defined in 'layout.html'.
+    - Displays a sidebar with filtering options and a main section with the Kanban board.
+    
+    Dependencies and Correlations:
+    - Depends on 'layout.html' for the overall page structure, ensuring consistent UI/UX across the application.
+    - Uses '_sidebar.html' to incorporate filtering and navigation, allowing users to filter tasks displayed on the Kanban board.
+    - Uses '_kanban_board.html' to render the Kanban board where tasks are categorized and can be moved between columns.
+    
+    Collaboration Note: 
+    - Developed by Stefania Galatolo, with invaluable assistance from ChatGPT 4.0. In an unexpected twist of fate, ChatGPT became the Kanban master while Stefania heroically fought against endless divs and CSS classes. Together, they transformed chaos into a streamlined task management board.
+#}
+
 {% extends "layout.html" %}
 
 {% block title %}
@@ -10,11 +35,23 @@
     <div class="row">
         <!-- Sidebar Section -->
         <div class="col-md-3">
+            {# 
+                This section includes the sidebar from '_sidebar.html'. 
+                - The sidebar provides filtering options to allow users to filter tasks displayed on the Kanban board.
+                - Filters might include options such as task priority, status, and POS ID, enhancing user experience by offering targeted task management.
+                - The sidebar is rendered in a Bootstrap column (3 columns wide out of 12) for a responsive layout.
+            #}
             {% include '_sidebar.html' %}
         </div>
 
         <!-- Kanban Board Section -->
         <div class="col-md-9">
+            {# 
+                This section includes the actual Kanban board from '_kanban_board.html'.
+                - The Kanban board displays tasks in different columns based on their status.
+                - Each task is rendered as a card that can be dragged and dropped between columns, allowing users to change the status of tasks interactively.
+                - The board is responsive and rendered in a Bootstrap column (9 columns wide out of 12), occupying the main area of the page.
+            #}
             {% include '_kanban_board.html' %}
         </div>
     </div>

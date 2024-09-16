@@ -1,3 +1,33 @@
+"""
+File: app.py
+Developer: Stefania Galatolo
+Assisted by: ChatGPT 4.0 (because coding alone is overrated!)
+
+Description:
+This is the main application file for the Task Management Tool, developed as the final project for CS50 by Harvard on EdX 2024. 
+The app manages tasks in a grocery store's accounts payable system, leveraging Python, Flask, and SQLAlchemy to provide an intuitive 
+user interface with features like task creation, modification, and a Kanban board for visual task management.
+
+ChatGPT's role: 
+Stefania could have totally written this herself, but why reinvent the wheel when you have a super-intelligent assistant? 
+So, I came in to help with some of the heavy lifting, commenting, and making sure everything is as clear as day. 
+No code lines were left behind!
+
+This file includes:
+- App configuration and setup
+- User authentication (registration, login, logout)
+- Task management routes (create, modify, filter)
+- Kanban board rendering and task updates
+- Error handling and logging
+- API endpoints for task and POS data retrieval
+
+Correlations:
+- Utilizes helper functions and constants from helpers.py for modularity and reusability.
+- Interacts with the database via SQLAlchemy Core.
+- Integrates with templates in the 'templates' directory for UI rendering.
+- Implements RESTful API principles for client-server interactions.
+"""
+
 from flask import Flask, flash, redirect, render_template, request, session, jsonify
 from flask_session import Session
 from sqlalchemy import select, and_, or_, desc, func
@@ -44,7 +74,15 @@ RECORDS_PER_PAGE = 15
 @app.route("/")
 @login_required
 def index():
-    """Redirect to the kanban page as the homepage."""
+    """
+    Redirect to the kanban page as the homepage.
+
+    This route serves as the default landing page after login. 
+    It redirects users to the Kanban board, which provides an overview of all tasks.
+
+    Returns:
+        - redirect to the '/kanban' route.
+    """
     return redirect("/kanban")
 
 @app.route("/register", methods=["GET", "POST"])
@@ -52,6 +90,15 @@ def register():
     """
     Register a new user by collecting username and password inputs.
     Handles form validation, password hashing, and user registration in the database.
+
+    Methods:
+        GET: Renders the registration form.
+        POST: Processes the registration data, validates it, and inserts a new user into the database.
+
+    Returns:
+        - On GET: Render the registration page.
+        - On POST success: Redirect to the login page.
+        - On POST failure: Render an apology or show an error message.
     """
     if request.method == "POST":
         # Validate form inputs
@@ -84,6 +131,15 @@ def login():
     """
     Log the user in by checking username and password.
     Clears any existing user session and sets a new session on successful login.
+
+    Methods:
+        GET: Renders the login form.
+        POST: Authenticates the user against the database and starts a new session.
+
+    Returns:
+        - On GET: Render the login page.
+        - On POST success: Redirect to the kanban page.
+        - On POST failure: Show an error message and prompt the user to try again.
     """
     # Clear any existing user session
     session.clear()
@@ -121,6 +177,9 @@ def login():
 def logout():
     """
     Log the user out by clearing the session data.
+
+    Returns:
+        - Redirect to the login page after clearing the session.
     """
     session.clear()
     flash("You have been logged out.")
@@ -129,7 +188,18 @@ def logout():
 @app.route("/tasks")
 @login_required
 def tasks():
-    """Display all tasks with pagination."""
+    """
+    Display all tasks with pagination.
+
+    This route fetches tasks from the database and renders them on the 'tasks.html' page.
+    Utilizes helper functions to format tasks and fetch POS data.
+
+    Query Parameters:
+        page (int): Page number for pagination. Defaults to 1.
+
+    Returns:
+        - Render the 'tasks.html' template with task data, POS data, and pagination info.
+    """
     page = request.args.get('page', 1, type=int)
 
     base_query = select(
@@ -177,7 +247,25 @@ def tasks():
 @app.route("/filter_tasks", methods=["POST"])
 @login_required
 def filter_tasks():
-    """Filter tasks based on given criteria with pagination."""
+    """
+    Filter tasks based on given criteria with pagination.
+
+    This route processes filtering options submitted via a JSON request. It constructs a SQLAlchemy 
+    query with dynamic filters and returns a paginated list of tasks matching the criteria.
+
+    Request JSON:
+        - search_query (str): Text to search in task descriptions, notes, or POS names.
+        - pos_id (int): POS ID to filter by.
+        - pos_name (str): POS Name to filter by.
+        - start_date (str): Start date to filter tasks from.
+        - end_date (str): End date to filter tasks until.
+        - statuses (list): List of task statuses to filter by.
+        - priorities (list): List of task priorities to filter by.
+        - page (int): Page number for pagination.
+
+    Returns:
+        - JSON response with tasks, current page, and total pages.
+    """
     data = request.get_json()
     page = data.get('page', 1)
 
@@ -274,6 +362,16 @@ def filter_tasks():
 def create_task():
     """
     Handle the creation of a new task or display the create task page with existing tasks.
+
+    Methods:
+        GET: Fetches existing tasks and POS data to display on the task creation page.
+        POST: Validates and inserts a new task into the database. Optionally inserts related 
+              blocker and reconciliation data.
+
+    Returns:
+        - On GET: Render the 'create.html' template with tasks and POS data.
+        - On POST success: Redirect to the tasks page.
+        - On POST failure: Show an error message and prompt the user to try again.
     """
     if request.method == "POST":
         # Get form data
@@ -402,6 +500,13 @@ def create_task():
 def get_task(task_id):
     """
     Fetch the task details for a given task_id and return them as JSON.
+
+    Args:
+        task_id (int): The ID of the task to fetch.
+
+    Returns:
+        - JSON response with task details if found.
+        - JSON error response if task not found or an error occurs.
     """
     try:
         with engine.connect() as conn:
@@ -444,6 +549,16 @@ def get_task(task_id):
 def modify_task():
     """
     Handle the modification of an existing task or display the modify task page with existing tasks.
+
+    Methods:
+        GET: Fetches existing tasks and POS data to display on the modification page.
+        POST: Updates the task information in the database. Optionally updates related 
+              blocker and reconciliation data.
+
+    Returns:
+        - On GET: Render the 'modify.html' template with tasks and POS data.
+        - On POST success: Redirect to the modify page.
+        - On POST failure: Show an error message and prompt the user to try again.
     """
     if request.method == "POST":
         # Get form data
@@ -591,7 +706,15 @@ def modify_task():
 @app.route("/kanban")
 @login_required
 def kanban():
-    """Render the Kanban board page with POS data for filters."""
+    """
+    Render the Kanban board page with POS data for filters.
+
+    The Kanban board provides a visual overview of tasks, categorized by status.
+    Fetches POS data for filtering purposes.
+
+    Returns:
+        - Render the 'kanban.html' template with POS data.
+    """
     try:
         with engine.connect() as conn:
             pos_data = conn.execute(select(pos_table.c.pos_id, pos_table.c.pos_name)).fetchall()
@@ -600,11 +723,27 @@ def kanban():
     except Exception as e:
         return jsonify({"error": "Error loading Kanban board"}), 500
 
-
 @app.route("/api/kanban_tasks", methods=["POST"])
 @login_required
 def get_kanban_tasks():
-    """Fetch all tasks for the Kanban board, with filters."""
+    """
+    Fetch all tasks for the Kanban board, with filters.
+
+    This route processes filtering options submitted via a JSON request and returns a list 
+    of tasks for rendering on the Kanban board.
+
+    Request JSON:
+        - search_query (str): Text to search in task descriptions.
+        - pos_id (int): POS ID to filter by.
+        - pos_name (str): POS Name to filter by.
+        - start_date (str): Start date to filter tasks from.
+        - end_date (str): End date to filter tasks until.
+        - statuses (list): List of task statuses to filter by.
+        - priorities (list): List of task priorities to filter by.
+
+    Returns:
+        - JSON response with filtered tasks.
+    """
     try:
         data = request.get_json()
         search_query = data.get("search_query", "").strip()
@@ -667,11 +806,21 @@ def get_kanban_tasks():
     except Exception as e:
         return jsonify({"error": "Failed to fetch tasks."}), 500
 
-
 @app.route("/api/update_task_status/<int:task_id>", methods=["POST"])
 @login_required
 def update_task_status(task_id):
-    """Update the task's status when dragged and dropped on the Kanban board."""
+    """
+    Update the task's status when dragged and dropped on the Kanban board.
+
+    Args:
+        task_id (int): The ID of the task to update.
+
+    Request JSON:
+        - status (str): The new status of the task.
+
+    Returns:
+        - JSON response indicating success or failure.
+    """
     logger.debug(f"Received request to update task with ID: {task_id}")
 
     # Retrieve the new status from the request
@@ -719,7 +868,16 @@ def update_task_status(task_id):
 @app.route("/api/pos_names", methods=["GET"])
 @login_required
 def get_pos_names():
-    """Fetch POS names based on selected POS ID."""
+    """
+    Fetch POS names based on selected POS ID.
+
+    Query Parameters:
+        pos_id (int): The ID of the POS to fetch names for.
+
+    Returns:
+        - JSON response with POS names if found.
+        - JSON error response if POS ID is not provided or an error occurs.
+    """
     pos_id = request.args.get("pos_id")
     if pos_id:
         with engine.connect() as conn:
@@ -731,7 +889,16 @@ def get_pos_names():
 @app.route("/api/pos_ids", methods=["GET"])
 @login_required
 def get_pos_ids():
-    """Fetch POS IDs based on selected POS Name."""
+    """
+    Fetch POS IDs based on selected POS Name.
+
+    Query Parameters:
+        pos_name (str): The name of the POS to fetch IDs for.
+
+    Returns:
+        - JSON response with POS IDs if found.
+        - JSON error response if POS name is not provided or an error occurs.
+    """
     pos_name = request.args.get("pos_name")
     if pos_name:
         with engine.connect() as conn:
@@ -743,7 +910,13 @@ def get_pos_ids():
 @app.route("/api/pos_names_and_ids", methods=["GET"])
 @login_required
 def get_all_pos_names_and_ids():
-    """Fetch all POS Names and POS IDs for filter reset."""
+    """
+    Fetch all POS Names and POS IDs for filter reset.
+
+    Returns:
+        - JSON response with all distinct POS names and IDs.
+        - JSON error response if an error occurs.
+    """
     try:
         with engine.connect() as conn:
             pos_names = conn.execute(select(pos_table.c.pos_name).distinct()).fetchall()
@@ -758,7 +931,15 @@ def get_all_pos_names_and_ids():
         return jsonify(success=False, message="Failed to fetch POS Names and IDs."), 500
 
 def errorhandler(e):
-    """Handle errors by returning a custom error message."""
+    """
+    Handle errors by returning a custom error message.
+
+    Args:
+        e (Exception): The exception that was raised.
+
+    Returns:
+        - Rendered apology template with the error message and code.
+    """
     logger.error(f"Error occurred: {e}")
     return apology(e.name, e.code)
 

@@ -1,3 +1,32 @@
+<!-- 
+    TaskFlow Project - Final Project for CS50 by Harvard EdX 2024
+    Developed by Stefania Galatolo, assisted (and occasionally rescued) by ChatGPT-4o.
+
+    This file defines the base layout for the TaskFlow web application. It includes the main structure of the HTML page, 
+    including the navigation bar, flash message display, and footer. Each page of the app inherits from this layout template 
+    and injects its specific content where blocks are defined (e.g., the main content area and page title).
+
+    The humor in this header reflects the journey of Stefania developing this project with the indispensable assistance of ChatGPT.
+    Stefania could not have done this alone—ChatGPT's infinite wisdom and some Bootstrap magic saved the day!
+
+    Main functions of this layout:
+    - Provides a navigation bar with links that adjust based on user session status (logged in or logged out).
+    - Renders the appropriate flash messages if any are generated (e.g., after successful log in or an error).
+    - Includes a container for dynamic page content, allowing pages to inject their own specific content within the defined block.
+    - Uses Bootstrap 5 for responsive design and easy styling.
+
+    Inputs: 
+    - Session variable `user_id` to determine if a user is logged in.
+    - Flash messages through Flask's `get_flashed_messages` for error/success alerts.
+
+    Outputs: 
+    - A responsive navigation bar, dynamic content injection for individual pages, flash message display, and a footer.
+
+    Other Files:
+    - This file relies on external CSS (Bootstrap and custom styles) and JS files loaded through CDNs and Flask's static file structure.
+    - The `url_for` function is used to link static assets (favicon, CSS) and dynamically inject the page's title and main content.
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,6 +43,7 @@
     <!-- Custom styles -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
+    <!-- Dynamic title block to be filled by individual pages -->
     <title>TaskFlow: {% block title %}{% endblock %}</title>
 </head>
 
@@ -21,10 +51,14 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-md navbar-light bg-light border">
         <div class="container-fluid">
+            <!-- TaskFlow brand -->
             <a class="navbar-brand" href="/"><span class="blue">Task</span><span class="red">Flow</span></a>
+            <!-- Toggler for small screens -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Navigation links, adjusting based on user login status -->
             <div class="collapse navbar-collapse" id="navbar">
                 {% if session["user_id"] %}
                     <ul class="navbar-nav me-auto mt-2">
@@ -49,7 +83,7 @@
         </div>
     </nav>
 
-    <!-- Flash messages -->
+    <!-- Flash messages (alerts for user actions) -->
     {% if get_flashed_messages() %}
         <header>
             <div class="alert alert-warning text-center mb-0" role="alert">
@@ -60,18 +94,19 @@
         </header>
     {% endif %}
 
-    <!-- Main content area -->
+    <!-- Main content area where individual page content will be injected -->
     <main class="container py-5 text-center">
         {% block main %}{% endblock %}
     </main>
 
+    <!-- Footer with small text -->
     <footer class="mb-5">
         <p class="mb-3 small text-center text-muted">
             &copy; 2024 TaskFlow
         </p>
     </footer>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS for interactivity (uses Bootstrap's CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 

@@ -1,5 +1,23 @@
 {% extends "layout.html" %}
 
+{# 
+    Log In Page Template
+    Developed by Stefania Galatolo, with assistance from ChatGPT 4.0. Let's say Stefania is the brains, and ChatGPT is the assistant who brings all the fancy ideas to life. A classic "Stefania & ChatGPT" collaboration!
+
+    This template is responsible for rendering the Log In page of the web application. It extends from the 'layout.html' file, which serves as the base template for all pages. The login form includes fields for the username and password and submits the data using the POST method to the '/login' route in the Flask application.
+
+    Inputs:
+    - Username: A text input field where the user enters their username.
+    - Password: A password input field where the user enters their password.
+
+    Outputs:
+    - Redirects to the '/login' route when the form is submitted. The server processes the data, authenticates the user, and responds accordingly.
+
+    Correlation with Other Files:
+    - This template extends 'layout.html', utilizing the base layout to maintain consistent styling and structure across the application.
+    - The form action points to the '/login' route defined in the 'app.py' file, where the login logic is implemented.
+#}
+
 {% block title %}
     Log In
 {% endblock %}
@@ -9,6 +27,19 @@
         <div class="row justify-content-center">
             <div class="col-md-3">
                 <h1 class="text-center mb-3">Log In</h1>
+                {# 
+                    Login Form
+                    This form collects the user's username and password. It sends a POST request to the '/login' route in the server, where user authentication is handled.
+
+                    Form Details:
+                    - Action: '/login' (route in the Flask application)
+                    - Method: POST (sends form data securely to the server)
+                    - Input Fields:
+                        - Username: Text input for the user's username. Autofocus is set for better UX.
+                        - Password: Password input for secure entry. The field is masked for security.
+
+                    On successful login, the user is typically redirected to the home page or the tasks page, depending on the application logic in 'app.py'.
+                #}
                 <form action="/login" method="post">
                     <div class="mb-2">
                         <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">

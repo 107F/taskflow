@@ -1,3 +1,41 @@
+{# 
+    File: tasks.html
+    Developed by: Stefania Galatolo, with a bit of (much needed) magical assistance from ChatGPT 4.0 
+    (because even the best developers need a little AI help sometimes 😅).
+
+    Description:
+    This template extends 'layout.html' and is responsible for rendering the main tasks page of the web application.
+    It is structured into two main sections:
+    1. Sidebar Section: Includes a sidebar for filtering and navigating through the tasks. 
+       This is included from the '_sidebar.html' partial template.
+    2. Tasks Table Section: Displays the tasks in a structured table format.
+       This section is included from the '_tasks_body.html' partial template.
+    The main purpose of this template is to provide an interactive and organized view of all tasks,
+    leveraging Bootstrap for responsive design. 
+
+    Inputs:
+    - None directly from this template. However, it relies on the '_sidebar.html' and '_tasks_body.html' 
+      for their respective functionalities, such as filtering options and task display.
+
+    Outputs:
+    - Renders a responsive tasks page layout with a sidebar and a tasks table section.
+    - The filtering actions in the sidebar will dynamically update the task list displayed in the tasks table section.
+
+    Correlations with Other Files:
+    - '_sidebar.html': Included for filtering tasks. This template contains various filtering options to help the user 
+      refine the task list based on different criteria like POS, status, and priority.
+    - '_tasks_body.html': Included for displaying the task list. It fetches and displays tasks in a structured table 
+      format, providing a detailed view of each task's attributes.
+    - 'layout.html': The base template which this template extends. It provides the overall structure and common elements 
+      (like navigation bar and footer) for the page.
+    
+    Flow:
+    1. The layout provided by 'layout.html' is extended to maintain a consistent design across the application.
+    2. Within the 'main' block, the page is divided into two main sections using Bootstrap's grid system.
+       a. The left section includes the sidebar, which allows users to filter tasks.
+       b. The right section displays the tasks in a table format, updating based on the filters applied in the sidebar.
+#}
+
 {% extends "layout.html" %}
 
 {% block main %}

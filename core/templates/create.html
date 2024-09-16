@@ -1,3 +1,39 @@
+{# 
+    Filename: create.html
+    Developed by: Stefania Galatolo, assisted by ChatGPT 4o
+    Description: 
+    This template renders the "Create Task" page, providing an interface for the user to create a new task 
+    and view the existing tasks in a tabular format. It extends the base layout (`layout.html`) and incorporates 
+    several reusable components using Jinja2's include functionality.
+    
+    Collaboration Note: 
+    If you're wondering how this magic happened, Stefania got by with a little help from ChatGPT 4o. Because who knew 
+    rendering HTML could be such a party? Remember, friends don't let friends code alone.
+
+    Template Structure:
+    - Extends the base layout from "layout.html".
+    - Sets the page title to "Create Task".
+    - Renders the main content block which consists of:
+        1. Sidebar: Includes "_sidebar.html" for displaying filter options.
+        2. Main Content Area:
+            - Header: Displays the title "Create Task".
+            - Task Creation Form: Includes "_create_form.html" to provide the form for creating new tasks.
+            - Tasks Table: Includes "_tasks_body.html" to render the current list of tasks in a table format.
+    
+    Correlations:
+    - "_sidebar.html": Provides filter options, allowing users to interactively narrow down the displayed tasks.
+    - "_create_form.html": Contains the form to create new tasks. When submitted, the form data is sent to the server 
+      to create a new task entry in the database.
+    - "_tasks_body.html": Displays a table of all current tasks. This template shows the task list without filters, 
+      giving a straightforward overview of the tasks.
+
+    Flow:
+    1. User lands on the "Create Task" page.
+    2. The sidebar is displayed on the left for filtering tasks.
+    3. The main content area shows the task creation form at the top.
+    4. Below the form, a table lists all tasks, allowing the user to see what tasks already exist.
+#}
+
 {% extends "layout.html" %}
 
 {% block title %}

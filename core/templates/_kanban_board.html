@@ -1,29 +1,71 @@
+<!-- 
+    Filename: kanban.html
+    Developed by Stefania Galatolo, with a sprinkle of magic from ChatGPT 4o.
+    Description:
+    - This file defines the Kanban board interface for the task management application.
+    - It creates a visual board with four columns: Backlog, To Do, In Progress, and Done.
+    - Tasks will be dynamically populated into these columns based on their status in the database.
+    - Includes a "Due Today" button for filtering tasks that are due today.
+    - Integrates with Sortable.js to provide drag-and-drop functionality for task cards.
+    - References an external JavaScript file ('kanban.js') that contains the logic for dynamic rendering and updating of tasks.
+    
+    Interactions:
+    - The board relies on the JavaScript file 'kanban.js' to handle:
+        * Fetching tasks from the server using AJAX.
+        * Populating the columns with task data.
+        * Implementing drag-and-drop to move tasks between columns and update their status.
+        * Filtering tasks due today when the "Due Today" button is clicked.
+    - Sortable.js library is included for enhancing user interaction through drag-and-drop.
+    - The tasks data is initially fetched from the server-side Flask route and rendered dynamically into each column.
+    - Updates made on the board are sent back to the server to persist the changes in the database.
+    
+    Usage:
+    - The user can interact with the Kanban board by dragging task cards between columns.
+    - Clicking the "Due Today" button filters and displays tasks that have a due date set for today.
+    - This template is part of the front-end interface and is essential for providing a visual representation of task statuses.
+
+    Inputs:
+    - Task data fetched from the server using JavaScript (from the database).
+    
+    Outputs:
+    - Dynamic visual representation of tasks within the Kanban board columns.
+    - Sends updates to the server when tasks are moved between columns.
+-->
+
 <h1 class="mb-4">Kanban Board</h1>
 
-<!-- "Due Today" button -->
+<!-- "Due Today" button: Filters tasks to show only those due today -->
 <button id="dueTodayBtn" class="btn btn-primary mb-3">Due Today</button>
 
-<!-- Kanban Board Columns -->
+<!-- Kanban Board Columns: Contains four columns to categorize tasks based on their status -->
 <div class="row mt-4 kanban-board">
+    <!-- Backlog Column: Displays tasks that are not yet started -->
     <div class="col-lg-3 kanban-column" id="backlog">
         <label class="form-label">Backlog</label>
-        <!-- Backlog tasks will be dynamically populated here -->
+        <!-- Backlog tasks will be dynamically populated here via JavaScript -->
     </div>
+    <!-- To Do Column: Displays tasks that are ready to be worked on -->
     <div class="col-lg-3 kanban-column" id="todo">
         <label class="form-label">To Do</label>
-        <!-- To Do tasks will be dynamically populated here -->
+        <!-- To Do tasks will be dynamically populated here via JavaScript -->
     </div>
+    <!-- In Progress Column: Displays tasks currently being worked on -->
     <div class="col-lg-3 kanban-column" id="inprogress">
         <label class="form-label">In Progress</label>
-        <!-- In Progress tasks will be dynamically populated here -->
+        <!-- In Progress tasks will be dynamically populated here via JavaScript -->
     </div>
+    <!-- Done Column: Displays tasks that have been completed -->
     <div class="col-lg-3 kanban-column" id="done">
         <label class="form-label">Done</label>
-        <!-- Done tasks will be dynamically populated here -->
+        <!-- Done tasks will be dynamically populated here via JavaScript -->
     </div>
 </div>
 
-<!-- Include Sortable.js for drag-and-drop functionality -->
+<!-- Include Sortable.js for enabling drag-and-drop functionality on the Kanban board -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
-<!-- Reference to the custom JavaScript file for Kanban functionality -->
+<!-- Reference to the custom JavaScript file for Kanban functionality 
+    - This script handles:
+      * Fetching and rendering tasks
+      * Implementing drag-and-drop to update task statuses
+      * Filtering tasks due today -->
 <script src="{{ url_for('static', filename='js/kanban.js') }}"></script>

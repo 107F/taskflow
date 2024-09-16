@@ -1,5 +1,40 @@
 {% extends "layout.html" %}
 
+{# 
+    File: modify.html 
+    Author: Stefania Galatolo, with a little help from ChatGPT 4o (because even wizards need a sidekick sometimes).
+    
+    Overview:
+    - This template is part of the task management web app.
+    - It's used to render the "Modify Task" page, which allows users to modify an existing task.
+    - The page layout is divided into two main sections:
+        1. Sidebar: For task filtering options.
+        2. Main Content Area: For task modification and task list display.
+    - This file interacts with several other components:
+        - Extends `layout.html` to maintain a consistent look and feel across the app.
+        - Includes `_sidebar.html` for task filtering options.
+        - Includes `_modify_form.html` which contains the form to modify a task.
+        - Includes `_tasks_body.html` to display a table of all tasks.
+    
+    Inputs:
+    - This template does not directly accept user input but interacts with user inputs via the included `_modify_form.html`.
+    
+    Outputs:
+    - Displays a form to modify task details and a table listing all current tasks.
+    
+    Correlation with Other Files:
+    - The modifications submitted via the form in `_modify_form.html` are processed by the Flask route handling task modification (typically using a POST request).
+    - `_tasks_body.html` dynamically displays tasks fetched from the database.
+    - `layout.html` provides the overall page structure and common elements like the navbar.
+    
+    Flow:
+    1. User navigates to the "Modify Task" page.
+    2. Sidebar allows for filtering tasks (filters defined in `_sidebar.html`).
+    3. User selects a task to modify via the form (`_modify_form.html`).
+    4. User submits the form, which sends the modification to the server for processing.
+    5. The task table (`_tasks_body.html`) displays the updated task list.
+#}
+
 {% block title %}
     Modify Task
 {% endblock %}

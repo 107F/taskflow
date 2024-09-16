@@ -1,22 +1,59 @@
+<!--
+    File: modify_task_form.html
+    Developed by: Stefania Galatolo, assisted by ChatGPT 4.0
+    Description:
+    This file contains the HTML form used for modifying an existing task within the application.
+    Users can update various task attributes, such as POS Name, POS ID, reconciliation date, certification status,
+    task status, priority, start date, due date, task description, blocker description, blocker responsible, and additional notes.
+
+    Key Features:
+    - Task ID input: Identifies the specific task to be modified.
+    - POS Name and POS ID dropdowns: Allow selection of point-of-sale identifiers.
+    - Various input fields and radio buttons for updating task properties.
+    - The form submits a POST request to the '/modify' route, which should be handled server-side by Flask to update the task in the database.
+    - It includes a JavaScript file 'modifyTasks.js' for handling any client-side interactivity or validation.
+
+    Flow:
+    - The user fills out the form fields.
+    - On form submission, a POST request is sent to the server.
+    - The server processes the data and updates the relevant task in the database.
+    - Feedback is given to the user based on the success or failure of the operation.
+
+    Correlations with Other Files:
+    - modifyTasks.js: Provides client-side logic for the modify form.
+    - app.py (Flask backend): Contains the route '/modify' that processes the form submission.
+    - taskflow.db: The database where task updates are stored.
+    - styles.css: May contain styles for the form and its elements.
+
+    Note: This form relies on data passed from the Flask backend, such as 'pos_data', which should be available in the context where this template is rendered.
+-->
+
 <form id="modifyTaskForm" method="POST" action="/modify">
     <div class="container-fluid">
         <div class="row">
             <!-- Task ID Input -->
-<!-- Task ID Input -->
-<div class="col-md-4">
-    <div class="mb-3">
-        <label for="task_id" class="form-label" style="font-weight: bold; font-size: 1.2em;">Task ID:</label>
-        <input id="task_id" class="form-control" name="task_id" type="text" placeholder="Enter Task ID" required>
-    </div>
-</div>
-
-
+            <!--
+                Input field for the unique Task ID.
+                This ID is used to identify which task is being modified.
+                It is required to match an existing task in the database.
+            -->
+            <div class="col-md-4">
+                <div class="mb-3">
+                    <label for="task_id" class="form-label" style="font-weight: bold; font-size: 1.2em;">Task ID:</label>
+                    <input id="task_id" class="form-control" name="task_id" type="text" placeholder="Enter Task ID" required>
+                </div>
+            </div>
         </div>
 
         <div class="row">
             <!-- Column 1 -->
             <div class="col-md-4">
                 <!-- POS Name Selection -->
+                <!--
+                    Dropdown for selecting the POS (Point of Sale) Name.
+                    Dynamically populated using Flask's template rendering with data from 'pos_data'.
+                    The selected POS Name is sent with the form data upon submission.
+                -->
                 <div class="mb-3">
                     <label for="pos_name" class="form-label">POS Name:</label>
                     <select id="pos_name" class="form-control" name="pos_name" required>
@@ -28,6 +65,11 @@
                 </div>
 
                 <!-- POS ID Selection -->
+                <!--
+                    Dropdown for selecting the POS ID.
+                    Correlates with the POS Name and is used to uniquely identify the POS in the database.
+                    The selected POS ID is sent with the form data upon submission.
+                -->
                 <div class="mb-3">
                     <label for="pos_id" class="form-label">POS ID:</label>
                     <select id="pos_id" class="form-control" name="pos_id" required>
@@ -39,12 +81,22 @@
                 </div>
 
                 <!-- Reconciliation Date -->
+                <!--
+                    Input for specifying the reconciliation date.
+                    Defaults to the current date using Flask's 'date.today()' method.
+                    Used to track when the task was last reconciled.
+                -->
                 <div class="mb-3">
                     <label for="reconciliation_date" class="form-label">Reconciliation Date:</label>
                     <input id="reconciliation_date" class="form-control" name="reconciliation_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
                 </div>
 
                 <!-- Certified -->
+                <!--
+                    Radio buttons for selecting whether the task is certified.
+                    Options are 'Yes' or 'No', representing a boolean value ('true' or 'false').
+                    Helps in tracking the certification status of a task.
+                -->
                 <div class="mb-3">
                     <label class="form-label">Certified:</label>
                     <div>
@@ -61,6 +113,11 @@
             <!-- Column 2 -->
             <div class="col-md-4">
                 <!-- Status Radio Buttons -->
+                <!--
+                    Radio buttons to set the task status.
+                    Options include 'Backlog', 'To Do', 'In Progress', and 'Done'.
+                    Used to indicate the current state of the task.
+                -->
                 <div class="mb-3">
                     <label class="form-label">Status:</label>
                     <div>
@@ -82,6 +139,11 @@
                 </div>
 
                 <!-- Priority Radio Buttons -->
+                <!--
+                    Radio buttons to set the priority level of the task.
+                    Options include 'None', 'Low', 'Medium', and 'High'.
+                    Helps in prioritizing tasks for better task management.
+                -->
                 <div class="mb-3">
                     <label class="form-label">Priority:</label>
                     <div>
@@ -103,12 +165,22 @@
                 </div>
 
                 <!-- Start Date -->
+                <!--
+                    Input for specifying the start date of the task.
+                    Defaults to the current date using Flask's 'date.today()' method.
+                    Used to track when the task is scheduled to begin.
+                -->
                 <div class="mb-3">
                     <label for="start_date" class="form-label">Start Date:</label>
                     <input id="start_date" class="form-control" name="start_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
                 </div>
 
                 <!-- Due Date -->
+                <!--
+                    Input for specifying the due date of the task.
+                    Defaults to the current date using Flask's 'date.today()' method.
+                    Helps in tracking the deadline for the task's completion.
+                -->
                 <div class="mb-3">
                     <label for="due_date" class="form-label">Due Date:</label>
                     <input id="due_date" class="form-control" name="due_date" type="date" value="{{ date.today().strftime('%Y-%m-%d') }}">
@@ -118,24 +190,40 @@
             <!-- Column 3 -->
             <div class="col-md-4">
                 <!-- Task Description -->
+                <!--
+                    Text area for entering a detailed description of the task.
+                    Provides context and additional information about the task.
+                -->
                 <div class="mb-3">
                     <label for="description" class="form-label">Task Description:</label>
                     <textarea id="description" class="form-control" name="description"></textarea>
                 </div>
 
                 <!-- Blocker Description -->
+                <!--
+                    Text area for describing any blockers preventing task progress.
+                    Used to identify and communicate obstacles that need resolution.
+                -->
                 <div class="mb-3">
                     <label for="blocker_desc" class="form-label">Blocker Description:</label>
                     <textarea id="blocker_desc" class="form-control" name="blocker_desc"></textarea>
                 </div>
 
                 <!-- Blocker Responsible -->
+                <!--
+                    Text area to specify the person responsible for the blocker.
+                    Helps in assigning responsibility for resolving obstacles.
+                -->
                 <div class="mb-3">
                     <label for="blocker_responsible" class="form-label">Blocker Responsible:</label>
                     <textarea id="blocker_responsible" class="form-control" name="blocker_responsible"></textarea>
                 </div>
 
                 <!-- Additional Notes -->
+                <!--
+                    Text area for adding any additional notes or comments about the task.
+                    Can include important details or reminders for the task.
+                -->
                 <div class="mb-3">
                     <label for="notes" class="form-label">Additional Notes:</label>
                     <textarea id="notes" class="form-control" name="notes"></textarea>
@@ -144,9 +232,17 @@
         </div>
 
         <!-- Modify Button -->
+        <!--
+            Button to submit the form data.
+            Sends a POST request to the server to update the task with the new details.
+        -->
         <button class="btn btn-primary" type="submit" id="modifyBtn">Modify</button>
     </div>
 </form>
 
 <!-- Include the JavaScript file for modify functionality -->
+<!--
+    Link to 'modifyTasks.js' for handling client-side interactivity.
+    This script may include form validation, AJAX requests, or other dynamic functionalities.
+-->
 <script src="{{ url_for('static', filename='js/modifyTasks.js') }}"></script>

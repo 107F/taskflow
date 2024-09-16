@@ -1,26 +1,54 @@
-{% extends "layout.html" %}
+{# 
+    File: register.html
+    Author: Stefania Galatolo, assisted by ChatGPT 4o
+    Description:
+    - This HTML template is responsible for rendering the registration page for new users.
+    - The page extends the base layout defined in "layout.html" and includes form elements
+      for user input, such as username and password fields.
+    - The form data is sent to the server using a POST request to the "/register" route.
+    - The inputs include:
+        * `username` - A unique identifier for the user.
+        * `password` - The user's password (stored securely on the server).
+        * `confirmation` - Confirmation of the password to ensure it matches the first input.
+    - This template works closely with the `app.py` Flask route `/register`, which handles
+      user registration by validating the form data, checking for username availability, 
+      and securely storing user credentials.
+    - It relies on the Bootstrap framework for responsive design and styling.
+
+    Collaboration Note:
+    - Developed by Stefania Galatolo with assistance from ChatGPT 4o.
+    - Despite Stefania's initial struggle with HTML forms, ChatGPT 4o lent its expertise to
+      ensure the form properly submits user data. No worries, Stefania – even the best coders
+      need a digital sidekick now and then!
+#}
+
+{% extends "layout.html" %} {# Extending the base template to maintain a consistent layout across the app #}
 
 {% block title %}
     Register
-{% endblock %}
+{% endblock %} {# Setting the page title to "Register" #}
 
 {% block main %}
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-3">
                 <h1 class="text-center mb-3">Register</h1>
-                <form action="/register" method="post">
+                <form action="/register" method="post"> {# The form sends a POST request to the "/register" route #}
                     <div class="mb-2">
                         <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
+                        {# Username field: captures the username, ensures it's unique on submission #}
                     </div>
                     <div class="mb-2">
                         <input class="form-control" name="password" placeholder="Password" type="password">
+                        {# Password field: captures the user's password securely (in plaintext here, hashed on the server) #}
                     </div>
                     <div class="mb-2">
                         <input class="form-control" name="confirmation" placeholder="Confirm Password" type="password">
+                        {# Confirmation field: ensures user inputs the correct password twice to avoid errors #}
                     </div>
                     <div class="text-center">
                         <button class="btn btn-primary" type="submit">Register</button>
+                        {# Submit button: submits the form data to the server for processing #}
                     </div>
                 </form>
             </div>

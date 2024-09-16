@@ -1,32 +1,77 @@
+<!-- 
+File: _sidebar.html (or similar, depending on where this is being included)
+Author: Stefania Galatolo, assisted by ChatGPT 4o
+---
+This template is responsible for rendering the filter sidebar in the task management application. 
+It provides the user interface elements for filtering tasks based on various criteria, such as POS number, POS name, status, priority, and date range.
+These filters are essential for narrowing down the list of tasks displayed in the main task view. 
+---
+Inputs: 
+    - `pos_data` (context variable): List of POS entries fetched from the database, each containing `pos_id` and `pos_name` for selection options.
+Outputs:
+    - Filtered task list based on user input through the filter options provided in this sidebar.
+Correlations with Other Files:
+    - This template is typically included in a larger layout or view, such as `tasks.html` or a similar file where task filtering is needed.
+    - The filter options here interact with JavaScript functions (potentially in `tasksLookup.js`) to dynamically update the task display without reloading the page.
+-->
+
 <!-- Search Bar -->
-<div class="filter-group mb-4"> <!-- Added a new class 'filter-group' for custom styling -->
-    <h2 class="filter-title">Filter</h2> <!-- Added a new class 'filter-title' for styling the filter heading -->
-    <label for="taskSearch" class="filter-label">Search Tasks:</label>
+<div class="filter-group mb-4"> <!-- Grouping for custom styling of the search bar -->
+    <h2 class="filter-title">Filter</h2> <!-- Title for the filter section -->
+    <label for="taskSearch" class="filter-label">Search Tasks:</label> <!-- Label for the search input field -->
+    <!-- 
+    Search Input: Allows users to search for tasks by a keyword.
+    - ID: taskSearch
+    - Class: form-control (Bootstrap class for styling)
+    - Placeholder: Provides a hint to the user on what to enter.
+    - Type: text (standard text input)
+    -->
     <input id="taskSearch" class="form-control" placeholder="Search tasks..." type="text">
 </div>
 
 <!-- POS Group -->
-<div class="filter-group mb-4">
-    <label for="filterPosID" class="filter-label">POS Number:</label>
+<div class="filter-group mb-4"> <!-- Grouping for POS-related filters -->
+    <label for="filterPosID" class="filter-label">POS Number:</label> <!-- Label for the POS Number filter -->
+    <!-- 
+    POS Number Dropdown: Allows filtering tasks by the POS ID.
+    - ID: filterPosID
+    - Class: form-select (Bootstrap class for styling)
+    - Options: Populated dynamically with `pos_data` context variable
+    - First Option: "All" to indicate no filtering
+    -->
     <select id="filterPosID" class="form-select mb-2">
-        <option value="">All</option>
+        <option value="">All</option> <!-- Default option to show all POS entries -->
         {% for pos in pos_data %}
-        <option value="{{ pos.pos_id }}">{{ pos.pos_id }}</option>
+        <!-- Looping through `pos_data` to populate the dropdown options -->
+        <option value="{{ pos.pos_id }}">{{ pos.pos_id }}</option> <!-- Option value and display are set to `pos_id` -->
         {% endfor %}
     </select>
 
-    <label for="filterPosName" class="filter-label">POS Name:</label>
+    <label for="filterPosName" class="filter-label">POS Name:</label> <!-- Label for the POS Name filter -->
+    <!-- 
+    POS Name Dropdown: Allows filtering tasks by the POS Name.
+    - ID: filterPosName
+    - Class: form-select (Bootstrap class for styling)
+    - Options: Populated dynamically with `pos_data` context variable
+    - First Option: "All" to indicate no filtering
+    -->
     <select id="filterPosName" class="form-select">
-        <option value="">All</option>
+        <option value="">All</option> <!-- Default option to show all POS entries -->
         {% for pos in pos_data %}
-        <option value="{{ pos.pos_name }}">{{ pos.pos_name }}</option>
+        <!-- Looping through `pos_data` to populate the dropdown options -->
+        <option value="{{ pos.pos_name }}">{{ pos.pos_name }}</option> <!-- Option value and display are set to `pos_name` -->
         {% endfor %}
     </select>
 </div>
 
 <!-- Status Filters -->
-<div class="filter-group mb-4">
-    <label class="filter-label">Status:</label>
+<div class="filter-group mb-4"> <!-- Grouping for task status filters -->
+    <label class="filter-label">Status:</label> <!-- Label for status filters -->
+    <!-- 
+    Status Checkboxes: Allows users to filter tasks by their current status.
+    - Each checkbox has an ID corresponding to the status it represents.
+    - Value: Set to the status that will be used for filtering.
+    -->
     <div>
         <input type="checkbox" id="statusBacklog" value="Backlog"> Backlog
     </div>
@@ -42,8 +87,13 @@
 </div>
 
 <!-- Priority Filters -->
-<div class="filter-group mb-4">
-    <label class="filter-label">Priority:</label>
+<div class="filter-group mb-4"> <!-- Grouping for task priority filters -->
+    <label class="filter-label">Priority:</label> <!-- Label for priority filters -->
+    <!-- 
+    Priority Checkboxes: Allows users to filter tasks based on their priority level.
+    - Each checkbox has an ID corresponding to the priority it represents.
+    - Value: Set to the priority level that will be used for filtering.
+    -->
     <div>
         <input type="checkbox" id="priorityNone" value="None"> None
     </div>
@@ -59,16 +109,38 @@
 </div>
 
 <!-- Reconciliation Dates Group -->
-<div class="filter-group mb-4">
-    <label for="startDate" class="filter-label">Start Date:</label>
+<div class="filter-group mb-4"> <!-- Grouping for date filters -->
+    <label for="startDate" class="filter-label">Start Date:</label> <!-- Label for start date filter -->
+    <!-- 
+    Start Date Input: Allows filtering tasks based on their start date.
+    - ID: startDate
+    - Type: date (provides a date picker UI)
+    - Value: Set to the current date by default using `strftime` for formatting.
+    -->
     <input type="date" id="startDate" class="form-control mb-2" value="{{ date.today().strftime('%Y-%m-%d') }}">
 
-    <label for="endDate" class="filter-label">Due Date:</label>
+    <label for="endDate" class="filter-label">Due Date:</label> <!-- Label for end date filter -->
+    <!-- 
+    End Date Input: Allows filtering tasks based on their due date.
+    - ID: endDate
+    - Type: date (provides a date picker UI)
+    - Value: Set to the current date by default using `strftime` for formatting.
+    -->
     <input type="date" id="endDate" class="form-control" value="{{ date.today().strftime('%Y-%m-%d') }}">
 </div>
 
 <!-- Filter Buttons -->
-<div class="filter-buttons">
+<div class="filter-buttons"> <!-- Grouping for filter action buttons -->
+    <!-- 
+    Apply Filters Button: Triggers the filtering process based on selected criteria.
+    - ID: filterBtn
+    - Class: btn btn-primary (Bootstrap classes for styling)
+    -->
     <button id="filterBtn" class="btn btn-primary mb-2">Apply Filters</button>
+    <!-- 
+    Clear Filters Button: Resets all filters to their default state.
+    - ID: clearFilterBtn
+    - Class: btn btn-secondary (Bootstrap classes for styling)
+    -->
     <button id="clearFilterBtn" class="btn btn-secondary mb-2">Clear Filters</button>
 </div>
