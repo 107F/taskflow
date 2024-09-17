@@ -1,9 +1,8 @@
-```markdown
 # Deployment Guide
 
 ## Purpose
 
-This Deployment Guide outlines the steps required to deploy the **Task Management System** to a production environment on a local machine. It is intended for use by developers and IT professionals responsible for transitioning the application from development to production. By following this guide, you will ensure a smooth and efficient deployment process, adhering to industry best practices and Agile methodologies.
+This Deployment Guide provides a detailed, step-by-step process to deploy the **Task Management System** to a production environment on a local machine. It is tailored for developers and IT professionals transitioning the application from development to production. By following this guide, you ensure an efficient deployment that aligns with industry best practices and Agile principles.
 
 ---
 
@@ -17,9 +16,10 @@ This Deployment Guide outlines the steps required to deploy the **Task Managemen
    - [Step 2: Set Up a Virtual Environment](#step-2-set-up-a-virtual-environment)
    - [Step 3: Install Dependencies](#step-3-install-dependencies)
    - [Step 4: Configure Environment Variables](#step-4-configure-environment-variables)
-   - [Step 5: Initialize the Database](#step-5-initialize-the-database)
-   - [Step 6: Run Database Migrations (If Applicable)](#step-6-run-database-migrations-if-applicable)
-   - [Step 7: Launch the Application](#step-7-launch-the-application)
+   - [Step 5: Update Database Path](#step-5-update-database-path)
+   - [Step 6: Launch the Application with Gunicorn](#step-6-launch-the-application-with-gunicorn)
+   - [Step 7: Configure Nginx for Reverse Proxy](#step-7-configure-nginx-for-reverse-proxy)
+   - [Step 8: Create a Shell Script for Fast Launch](#step-8-create-a-shell-script-for-fast-launch)
 3. [Production Configuration Details](#production-configuration-details)
    - [Database Setup](#database-setup)
    - [Environment Variables](#environment-variables)
@@ -38,45 +38,21 @@ This Deployment Guide outlines the steps required to deploy the **Task Managemen
 
 ### Software Requirements
 
-Ensure that the following software is installed on the local machine:
+Ensure the following software is installed on the local machine:
 
-1. **Python 3.10 or higher**
-   - Download from [Python Official Website](https://www.python.org/downloads/).
-   - Verify installation:
-     ```bash
-     python --version
-     ```
-
-2. **pip (Python Package Installer)**
-   - Comes bundled with Python 3.4+.
-   - Verify installation:
-     ```bash
-     pip --version
-     ```
-
-3. **Git**
-   - Download from [Git Official Website](https://git-scm.com/downloads).
-   - Verify installation:
-     ```bash
-     git --version
-     ```
-
-4. **SQLite**
-   - Usually included with Python.
-   - Verify installation:
-     ```bash
-     sqlite3 --version
-     ```
-
-5. **Virtual Environment Tool**
-   - Included with Python (`venv` module).
-   - No separate installation required.
+1. **Python 3.10 or higher**: Required for running the Flask application.
+2. **pip (Python Package Installer)**: Used for installing dependencies.
+3. **Git**: Necessary for cloning the project repository.
+4. **SQLite**: Acts as the database engine for the application.
+5. **Virtual Environment Tool**: Python’s `venv` module will be used to create an isolated environment.
+6. **Gunicorn**: Installed globally to serve the application in production.
+7. **Nginx**: Installed to act as a reverse proxy server for Gunicorn.
 
 ### Environment Setup
 
-- **Operating System**: Windows, macOS, or Linux.
-- **User Permissions**: Administrator or user with sufficient privileges to install software and modify system settings.
-- **Network Access**: Internet connection to download dependencies.
+- **Operating System**: Deployment is performed on WSL (Windows Subsystem for Linux) running Ubuntu.
+- **User Permissions**: Administrator privileges to install and configure required software.
+- **Network Access**: Required for downloading dependencies and setting up the server.
 
 ---
 
@@ -84,115 +60,49 @@ Ensure that the following software is installed on the local machine:
 
 ### Step 1: Clone the Repository
 
-1. **Open Terminal or Command Prompt**:
-   - **Windows**: Press `Win + R`, type `cmd`, and press Enter.
-   - **macOS/Linux**: Open the Terminal application.
-
-2. **Navigate to Desired Directory**:
-   ```bash
-   cd /path/to/desired/directory
-   ```
-
-3. **Clone the Repository**:
-   ```bash
-   git clone <repository_url>
-   ```
-   - Replace `<repository_url>` with the actual Git repository URL.
-
-4. **Navigate into the Project Directory**:
-   ```bash
-   cd task-management-system
-   ```
+- Open the WSL terminal and navigate to the desired directory where the project will be stored.
+- Use Git to clone the repository from the provided GitHub URL.
+- Change to the newly created project directory.
 
 ### Step 2: Set Up a Virtual Environment
 
-1. **Create a Virtual Environment**:
-   ```bash
-   python -m venv venv
-   ```
-
-2. **Activate the Virtual Environment**:
-   - **Windows**:
-     ```bash
-     venv\Scripts\activate
-     ```
-   - **macOS/Linux**:
-     ```bash
-     source venv/bin/activate
-     ```
+- Create a virtual environment using Python’s `venv` module within the project directory.
+- Activate the virtual environment to isolate the project's dependencies.
 
 ### Step 3: Install Dependencies
 
-1. **Ensure Virtual Environment is Active**:
-   - The command prompt should display `(venv)` prefix.
-
-2. **Install Required Packages**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Verify Installation**:
-   ```bash
-   pip list
-   ```
-   - Confirm that all packages are installed without errors.
+- With the virtual environment activated, install the required packages from the `requirements.txt` file.
+- Verify that all necessary dependencies are installed correctly.
 
 ### Step 4: Configure Environment Variables
 
-1. **Create a `.env` File** in the project root directory.
+- Create a `.env` file in the project's root directory to securely store environment variables.
+- Set the necessary environment variables, including `FLASK_ENV`, `SECRET_KEY`, and `DATABASE_URL`.
+- Ensure the `.env` file is secured and not included in version control by adding it to `.gitignore`.
 
-2. **Add the Following Variables**:
-   ```env
-   FLASK_ENV=production
-   SECRET_KEY=<your_secret_key>
-   DATABASE_URL=sqlite:///core/taskflow.db
-   ```
+### Step 5: Update Database Path
 
-3. **Generate a Secure `SECRET_KEY`**:
-   ```bash
-   python -c "import secrets; print(secrets.token_hex(16))"
-   ```
-   - Replace `<your_secret_key>` with the generated value.
+- Update the `DATABASE_URL` in the `.env` file to use an absolute path for the SQLite database.
+- Verify that the application references the correct location of the `taskflow.db` file.
 
-4. **Secure the `.env` File**:
-   - Add `.env` to `.gitignore` to prevent it from being committed to version control.
+### Step 6: Launch the Application with Gunicorn
 
-### Step 5: Initialize the Database
+- Activate the virtual environment.
+- Use Gunicorn to serve the Flask application, binding it to the desired IP and port.
+- Verify that the application is running by accessing the specified URL in a web browser.
 
-1. **Run the Database Setup Script**:
-   ```bash
-   python core/db_setup.py
-   ```
-   - This script creates the `taskflow.db` SQLite database and initializes the schema.
+### Step 7: Configure Nginx for Reverse Proxy
 
-### Step 6: Run Database Migrations (If Applicable)
+- Install Nginx on WSL to act as a reverse proxy for the application.
+- Edit the Nginx configuration file to forward requests to Gunicorn and serve static files.
+- Restart Nginx to apply the configuration and verify that it is correctly forwarding requests.
 
-- **Note**: If the project uses migrations (e.g., with Flask-Migrate or Alembic), run:
-  ```bash
-  flask db upgrade
-  ```
+### Step 8: Create a Shell Script for Fast Launch
 
-### Step 7: Launch the Application
-
-1. **Set the Flask Application Environment Variable**:
-   - **Windows**:
-     ```bash
-     set FLASK_APP=core/app.py
-     ```
-   - **macOS/Linux**:
-     ```bash
-     export FLASK_APP=core/app.py
-     ```
-
-2. **Start the Flask Application**:
-   ```bash
-   flask run --host=0.0.0.0 --port=8000
-   ```
-   - The application will be accessible at `http://localhost:8000`.
-
-3. **Verify the Application is Running**:
-   - Open a web browser and navigate to `http://localhost:8000`.
-   - Ensure the login page or home page loads successfully.
+- Create a shell script in the project directory to automate the startup process.
+- The script should activate the virtual environment, launch Gunicorn, and handle any necessary setup.
+- Mark the script as executable and test it to ensure it runs the application without requiring manual input.
+- For convenience, create a desktop shortcut to this script, allowing for a quick launch of the application on system startup.
 
 ---
 
@@ -200,31 +110,26 @@ Ensure that the following software is installed on the local machine:
 
 ### Database Setup
 
-- **Database Engine**: SQLite (for local production).
-- **Database File Location**: `core/taskflow.db`.
-- **Permissions**: Ensure the application has read/write access to the database file.
-- **Backup Strategy**: Regularly back up `taskflow.db` to prevent data loss.
+- **Engine**: SQLite is used for local production.
+- **File Location**: `taskflow.db` is located in the `core` directory with an absolute path specified.
+- **Backup**: Implement a manual backup strategy for `taskflow.db`.
 
 ### Environment Variables
 
-- **FLASK_ENV**: Set to `production` to enable production settings.
-- **SECRET_KEY**: A securely generated key for session management and security.
-- **DATABASE_URL**: Specifies the database connection string.
+- **FLASK_ENV**: Set to `production` to disable debugging and enable production settings.
+- **SECRET_KEY**: A securely generated key for session management.
+- **DATABASE_URL**: Points to the absolute path of the local SQLite database file.
 
 ### Logging Configuration
 
-- **Log File Location**: `core/app.log`.
-- **Logging Level**: Configure in `app.py` or the application's logging configuration file.
-- **Permissions**: Ensure the application can write to the log file.
+- **Log File**: Application logs are stored in `core/app.log`.
+- **Logging Level**: Configured to capture errors and warnings.
 
 ### Security Considerations
 
-- **Session Security**: Keep `SECRET_KEY` confidential.
-- **Dependency Management**: Regularly update dependencies to patch security vulnerabilities.
-  ```bash
-  pip install --upgrade -r requirements.txt
-  ```
-- **Access Control**: Verify that all routes requiring authentication are properly protected.
+- **Session Security**: Ensure `SECRET_KEY` is kept secure.
+- **Input Validation**: Validate all user inputs to prevent security vulnerabilities.
+- **Access Control**: Verify that sensitive routes are protected and require authentication.
 
 ---
 
@@ -232,63 +137,33 @@ Ensure that the following software is installed on the local machine:
 
 ### Functional Testing
 
-Conduct the following tests to ensure the application functions correctly:
-
-1. **User Authentication**:
-   - **Register** a new user.
-   - **Login** with the new credentials.
-   - **Logout** and attempt to access a protected route.
-
-2. **Task Management**:
-   - **Create** a new task.
-   - **Modify** an existing task.
-   - **Delete** a task.
-   - **Verify** that tasks appear correctly in lists and on the Kanban board.
-
-3. **Kanban Board Functionality**:
-   - **Drag and Drop** tasks between columns.
-   - **Confirm** that task statuses update accordingly.
-
-4. **Data Filtering and Search**:
-   - Use filters and search functionality to **locate** specific tasks.
+- Test user registration, login, and session management to ensure secure access control.
+- Verify task creation, modification, deletion, and Kanban board functionality.
+- Test data filtering and search features for accuracy.
 
 ### Database Verification
 
-1. **Data Integrity**:
-   - Use a SQLite client to inspect `taskflow.db`.
-   - **Verify** that all tables are present and correctly populated.
-
-2. **Transaction Testing**:
-   - Ensure that **create**, **read**, **update**, and **delete** (CRUD) operations reflect accurately in the database.
+- Inspect `taskflow.db` using SQLite commands to verify data integrity.
+- Confirm that CRUD operations reflect correctly in the database.
 
 ### Performance Testing
 
-- **Response Time**: Ensure the application responds promptly to user actions.
-- **Resource Utilization**: Monitor CPU and memory usage to identify potential bottlenecks.
+- Perform load testing to evaluate application response times and stability under concurrent access.
+- Monitor system resource utilization to ensure optimal performance.
 
 ### Security Testing
 
-1. **Input Validation**:
-   - Test forms with invalid or malicious inputs to ensure proper validation and error handling.
-
-2. **Access Control**:
-   - Attempt to access restricted resources without authentication to confirm security measures are effective.
-
-3. **Session Management**:
-   - Verify that sessions expire appropriately and that session data is secure.
+- Test input validation for security robustness against SQL injection and XSS attacks.
+- Verify session management and access control to ensure security compliance.
 
 ---
 
 ## Conclusion
 
-By following this Deployment Guide, you have successfully deployed the Task Management System to a production environment on a local machine. This process aligns with Agile best practices, emphasizing iterative testing and continuous integration to ensure a robust and reliable application.
+This Deployment Guide provides a detailed and structured approach to deploying the Task Management System to a local production environment. It covers setting up the environment, configuring necessary services like Gunicorn and Nginx, and includes creating a shell script for faster application startup. Following this guide ensures a secure and efficient deployment process, aligned with industry best practices.
 
 ---
 
-**Note**: For ongoing maintenance, consider implementing automated testing and deployment pipelines to streamline future updates. Regularly review and update dependencies to maintain security and performance standards.
+**Document Version**: 1.4
 
----
-
-**Document Version**: 1.0
-
-**Last Updated**: 16/09/2024
+**Last Updated**: 17/09/2024
