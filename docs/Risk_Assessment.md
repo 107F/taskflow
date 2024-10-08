@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The purpose of this document is to identify potential risks associated with the Task Management System project. It includes technical, operational, and business risks, along with their likelihood and impact. For each identified risk, appropriate mitigation strategies and contingency plans are outlined to ensure the project’s resilience and stability.
+The purpose of this document is to identify potential risks associated with the Taskflow project. It includes technical, operational, and business risks, along with their likelihood and impact. For each identified risk, appropriate mitigation strategies and contingency plans are outlined to ensure the project’s resilience and stability.
 
 ## Identification of Risks
 
