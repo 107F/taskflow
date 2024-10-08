@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Task Management System is a comprehensive web-based application developed using Python, Flask, SQLAlchemy, HTML, CSS, and JavaScript. It provides an intuitive interface for managing tasks in a grocery store's accounts payable system, featuring task creation, modification, a Kanban board for visual task management, and task filtering. This document outlines the system architecture, including its components, database schema, data flow, and interactions.
+Taskflow is a comprehensive web-based application developed using Python, Flask, SQLAlchemy, HTML, CSS, and JavaScript. It provides an intuitive interface for managing tasks within the accounts payable system of a consumer goods retail chain. The system features task creation, modification, a Kanban board for visual task management, and task filtering. This document outlines the system architecture, including its components, database schema, data flow, and interactions.
 
 ## System Architecture
 
