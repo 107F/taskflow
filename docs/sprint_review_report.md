@@ -1,10 +1,10 @@
-# Kanban Board Task Management System - Project Development Overview
+# Taskflow - Kanban Board Task Management System: Project Development Overview
 
 This project was developed as the final assignment for the CS50 course by Harvard on EdX 2024. It addresses the need for a robust and scalable task management system by transitioning from a static Excel spreadsheet to a SQL database, serving as the foundation for a web-based Kanban board application. The development process followed Agile methodology, allowing for iterative development and continuous feedback.
 
 ## Requirements and Objectives
 
-- **Project Goal:** Develop a Kanban board task management system tailored for a grocery and consumer goods retailer with 28 points of sale.
+- **Project Goal:** Develop a Kanban board task management system tailored for the accounts payable system of a consumer goods retail chain with 28 points of sale.
 - **Core Functionalities:**
   - Implement a Kanban board for task visualization and management.
   - Provide user authentication and secure access.
