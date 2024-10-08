@@ -2,7 +2,7 @@
 
 ## Project Timeline Overview
 
-This timeline provides an estimated schedule for the development of the Kanban Board Task Management System. Given that this project is a solo effort undertaken as a side project alongside a full-time job, the outlined schedule is provisional and subject to change. The timeline is designed to be flexible and will be adjusted based on sprint reviews and revisions as part of the Agile development process.
+This timeline provides an estimated schedule for the development of Taskflow, Kanban Board task management system. Given that this project is a solo effort undertaken as a side project alongside a full-time job, the outlined schedule is provisional and subject to change. The timeline is designed to be flexible and will be adjusted based on sprint reviews and revisions as part of the Agile development process.
 
 ### Estimated Timeline:
 
