@@ -1,6 +1,6 @@
 # Product Backlog
 
-This document outlines the product backlog for the task management application. Each item is prioritized, and details include the description, priority, and status.
+This document outlines the product backlog for Taskflow, a web-based application for managing tasks within the accounts payable system of a consumer goods retail chain. Each item is prioritized, and details include the description, priority, and status.
 
 ## Backlog Items
 
