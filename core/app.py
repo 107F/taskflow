@@ -4,7 +4,8 @@ Developer: Stefania Galatolo
 Assisted by: ChatGPT 4.0
 
 Description:
-This is the main application file for the Task Management Tool, developed as the final project for CS50 by Harvard on EdX 2024. 
+This is the main application file for Taskflow, a web-based application for managing tasks within the accounts payable system of a 
+consumer goods retail chain, developed as the final project for CS50 by Harvard on EdX 2024. 
 The app manages tasks in a grocery store's accounts payable system, leveraging Python, Flask, and SQLAlchemy to provide an intuitive 
 user interface with features like task creation, modification, and a Kanban board for visual task management.
 
