@@ -1,7 +1,5 @@
 /**
  * modifyTasks.js
- * Developed by Stefania Galatolo, with a little help from ChatGPT 4.0.
- * (Coding is tough, and sometimes it's just better to have a co-pilot who never sleeps, right?)
  *
  * This script is responsible for handling the modification of tasks in the task management application.
  * It supports key operations such as:
