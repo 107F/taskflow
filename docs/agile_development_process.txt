@@ -1,6 +1,6 @@
 # Agile Development Process
 
-The objective of this project is to develop a Kanban board task management system for the accounts payable department of a grocery and consumer goods retailer with 28 points of sale. The application transitions from managing a CSV file to implementing a robust SQL database and is developed using Python, Flask, HTML, CSS, and JavaScript. An Agile approach is employed, with work broken down into sprints and managed through Git and GitHub using Visual Studio Code.
+The objective of this project is to develop a Kanban board task management system for the accounts payable department of a consumer goods retail chain with 28 points of sale. The application transitions from managing a CSV file to implementing a robust SQL database and is developed using Python, Flask, HTML, CSS, and JavaScript. An Agile approach is employed, with work broken down into sprints and managed through Git and GitHub using Visual Studio Code.
 
 The core feature is a Kanban board that allows users to interact with task records in the database via a graphical user interface, providing functionality for updating records through drag-and-drop actions.
 
