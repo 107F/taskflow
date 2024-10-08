@@ -1,7 +1,5 @@
 /*
  * kanban.js
- * Developed by Stefania Galatolo, with a little help (or a lot) from ChatGPT 4o. 
- * Let's just say Stefania was about to be lost in the JavaScript jungle, but luckily, ChatGPT swung in on a vine and helped out!
  *
  * This script is responsible for handling the entire functionality of the Kanban board in the task management tool.
  * It manages task filtering, fetching tasks from the server, updating task statuses through a drag-and-drop interface, and initializing the Kanban board columns.
