@@ -1,7 +1,4 @@
 /*
- * Stefania Galatolo's JavaScript Magic
- * Developed in collaboration with ChatGPT 4o, because even the most brilliant minds need a little AI-powered magic wand now and then!
- * 
  * File: createTasks.js
  * 
  * Purpose: This file is responsible for handling the interactivity of the task creation form in the task management app. 
