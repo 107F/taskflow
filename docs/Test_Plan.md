@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The purpose of this document is to outline the testing strategy for the Task Management System. It includes details on the types of tests conducted, including unit, integration, and end-to-end tests. This plan ensures that all aspects of the application are systematically tested to guarantee reliability and performance before deployment.
+The purpose of this document is to outline the testing strategy for Taskflow. It includes details on the types of tests conducted, including unit, integration, and end-to-end tests. This plan ensures that all aspects of the application are systematically tested to guarantee reliability and performance before deployment.
 
 ## Overview of Testing Strategy and Scope
 
