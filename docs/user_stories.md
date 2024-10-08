@@ -1,6 +1,6 @@
 # User Stories
 
-This document outlines the user stories that have been defined and implemented for the task management application. Each user story follows the standard format "As a [user role], I want [goal] so that [reason]."
+This document outlines the user stories that have been defined and implemented for Taskflow web application. Each user story follows the standard format "As a [user role], I want [goal] so that [reason]."
 
 ## User Stories
 
