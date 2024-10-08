@@ -1,12 +1,7 @@
 /*
  * tasksLookup.js
- * Developed by Stefania Galatolo with invaluable assistance from ChatGPT 4.0.
- * You know, Stefania had grand plans for this feature, but it turns out that
- * async JavaScript was like a foreign language she hadn't quite mastered yet.
- * Enter ChatGPT, the silent code ninja, helping her conquer the asynchronous
- * jungle one fetch call at a time.
  * 
- * This script is a crucial part of the task management app. It handles:
+ * This script handles:
  * - Fetching tasks from the server based on user input and filters.
  * - Filtering tasks by various criteria such as POS ID, POS Name, dates, status, and priority.
  * - Providing real-time search functionality as the user types.
