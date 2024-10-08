@@ -4,7 +4,7 @@
 
 ## Description
 
-The **Kanban Board Task Management System** is a web-based application developed by Stefania Galatolo as part of the CS50 course by Harvard on edX 2024. The system is designed to address the challenges faced by a grocery and consumer goods retailer with 28 points of sale. Previously, task management relied on static Excel spreadsheets, which introduced limitations in data management, scalability, and collaboration. To address these issues, the system transitions from a spreadsheet-based model to a web-based application using a robust SQL database.
+The **Kanban Board Task Management System** is a web-based application developed by Stefania Galatolo as part of the CS50 course by Harvard on edX 2024. The system is designed to address the challenges faced by a consumer goods retailer with 28 points of sale (POS). Previously, task management relied on static Excel spreadsheets, which introduced limitations in data management, scalability, and collaboration. To address these issues, the system transitions from a spreadsheet-based model to a web-based application using a robust SQL database.
 
 The project leverages Python, Flask, SQLAlchemy, HTML, CSS, and JavaScript to provide a scalable and user-friendly solution for task management, ensuring data persistence and improving efficiency. The development followed Agile methodologies to enable iterative progress and feedback.
 
