@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-The goal of this project is to develop a web-based Kanban board task management system for a grocery and consumer goods retailer with 28 points of sale. The system aims to enhance task management by transitioning from a static Excel spreadsheet to a more robust and scalable SQL database. The development follows Agile principles, focusing on delivering core functionalities iteratively while allowing flexibility for future enhancements.
+The goal of this project is to develop a web-based Kanban board task management system for the accounts payable system of a consumer goods retail chain. The system aims to enhance task management by transitioning from a static Excel spreadsheet to a more robust and scalable SQL database. The development follows Agile principles, focusing on delivering core functionalities iteratively while allowing flexibility for future enhancements.
 
 ## Stakeholder Requirements
 
@@ -11,7 +11,7 @@ The goal of this project is to develop a web-based Kanban board task management 
 The project will deliver a minimum viable product (MVP) that includes the following core functionalities, designed to meet the primary needs of the accounts payable department:
 
 #### 1.1 Data Migration
-- **Requirement 1.1.1:** Migrate existing tasks from an Excel workbook to an SQL database using SQLAlchemy. The workbook includes fields such as `Grocery Store/Headquarter`, `Task Title`, `Task Status`, `Task Priority`, `Grocery Store Location`, `Task Start Date`, `Task Finish Date`, and `Notes`.
+- **Requirement 1.1.1:** Migrate existing tasks from an Excel workbook to an SQL database using SQLAlchemy. The workbook includes fields such as `POS/Headquarter`, `Task Title`, `Task Status`, `Task Priority`, `POS Location`, `Task Start Date`, `Task Finish Date`, and `Notes`.
 - **Requirement 1.1.2:** Design a database schema that reflects the structure of the Excel workbook, establishing appropriate tables and relationships to support future enhancements.
 
 #### 1.2 Task Management
