@@ -1,10 +1,6 @@
 """
 helpers.py
 
-Developed by Stefania Galatolo, assisted by ChatGPT 4o, because let's be honest, coding is always better with a little AI magic.
-Stefania's coding journey was made more exciting with ChatGPT's witty banter and occasional dad jokes. Together, they tackled the 
-task management app, making sure no task was left unhandled (or uncommented). 
-
 This file serves as the utility hub for the task management application. It includes helper functions for interacting with the 
 SQLite database, handling pagination, fetching POS data, formatting tasks for display, and managing user sessions. 
 
