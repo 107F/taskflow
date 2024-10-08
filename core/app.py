@@ -1,17 +1,12 @@
 """
 File: app.py
 Developer: Stefania Galatolo
-Assisted by: ChatGPT 4.0 (because coding alone is overrated!)
+Assisted by: ChatGPT 4.0
 
 Description:
 This is the main application file for the Task Management Tool, developed as the final project for CS50 by Harvard on EdX 2024. 
 The app manages tasks in a grocery store's accounts payable system, leveraging Python, Flask, and SQLAlchemy to provide an intuitive 
 user interface with features like task creation, modification, and a Kanban board for visual task management.
-
-ChatGPT's role: 
-Stefania could have totally written this herself, but why reinvent the wheel when you have a super-intelligent assistant? 
-So, I came in to help with some of the heavy lifting, commenting, and making sure everything is as clear as day. 
-No code lines were left behind!
 
 This file includes:
 - App configuration and setup
