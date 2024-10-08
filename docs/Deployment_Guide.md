@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This Deployment Guide provides a detailed, step-by-step process to deploy the **Task Management System** to a production environment on a local machine. It is tailored for developers and IT professionals transitioning the application from development to production. By following this guide, you ensure an efficient deployment that aligns with industry best practices and Agile principles.
+This Deployment Guide provides a detailed, step-by-step process to deploy the Taskflow to a production environment on a local machine. It is tailored for developers and IT professionals transitioning the application from development to production. By following this guide, you ensure an efficient deployment that aligns with industry best practices and Agile principles.
 
 ---
 
